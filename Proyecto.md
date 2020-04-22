@@ -30,54 +30,66 @@ Para realizar todas estan funcionalidades, Helm utiliza los siguientes component
 
 ###### Comprobar la versión de Kubernetes:
 ~~~
-sudo kubectl version
-    Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.0",   GitCommit:"9e991415386e4cf155a24b1da15becaa390438d8", GitTreeState:"clean",   BuildDate:"2020-03-25T14:58:59Z", GoVersion:"go1.13.8", Compiler:"gc", Platform:"linux/amd64"}
-    Server Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.0",   GitCommit:"9e991415386e4cf155a24b1da15becaa390438d8", GitTreeState:"clean",   BuildDate:"2020-03-25T14:50:46Z", GoVersion:"go1.13.8", Compiler:"gc", Platform:"linux/amd64"}
+kubectl version
+    Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2",   GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean",   BuildDate:"2020-04-16T11:56:40Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
+    Server Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2",   GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean",   BuildDate:"2020-04-16T11:48:36Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
 
 * Tener la herramienta de líneas de comando `kubectl` instalada en su equipo local, configurada para poder conectarse al clúster.
 
 ###### Comprobar la conectividad:
 ~~~
-sudo kubectl cluster-info
+kubectl cluster-info
     Kubernetes master is running at https://10.0.0.10:6443
     KubeDNS is running at https://10.0.0.10:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
-
-    To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
 ~~~
-
 
 ### Instalación de Helm
 
 Vamos a instala la herramienta de linea de comando `helm` en nuestro equipo local de trabajo.
 
-Tenemos que descargarnos un script con comandos, proporcionado oficialmente en el repositorio de GitHub de Helm.
+Descargamos la última release de Helm de la versión 3. Para hacer esto nos vamos a la [página oficial](https://github.com/helm/helm/releases) y nos descargamos el fichero `.tar.gz` para Linux
 
-~~~
-curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > install-helm.sh
-~~~
+> **NOTA**: Es recomendable que nos descarguemos una versión que este **Verificada**.
 
-Cambiamos los permisos del script para que sea ejecutable
-
+En el momento de la creación de este tutorial, nos descargamos la versión 3.2.0 de Helm.
 ~~~
-chmod u+x install-helm.sh
+wget https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz
 ~~~
 
-Para ejecutar el script utilizamos el siguiente comando:
-
+Descromprimimos el fichero:
 ~~~
-./install-helm.sh
-~~~
-
-Nos tendrá que salir un mensaje al finalizar como el siguiente:
-
-~~~
-helm installed into /usr/local/bin/helm
-Run 'helm init' to configure helm.
+tar -zxvf helm-v3.2.0-linux-amd64.tar.gz 
 ~~~
 
-Y estará la herramienta Helm instalada.
+Tenemos que mover el binario del directorio que hemos desempaquetado a la dirección, en mi caso, `/usr/local/bin/helm` 
 
-### Instalación de Tiller
+~~~
+sudo mv linux-amd64/helm /usr/local/bin/helm
+~~~
 
-Tiller es un complemento del comando helm que se ejecuta en su clúster, 
+Comprobamos la versión
+~~~
+helm version
+    version.BuildInfo{Version:"v3.2.0", GitCommit:"e11b7ce3b12db2941e90399e874513fbd24bcb71",   GitTreeState:"clean", GoVersion:"go1.13.10"}
+~~~
+
+Ya tenemos instalado Helm en la version 3, lo siguiente que vamos a ver es como iniciar el repositorio chart de Helm.
+
+### Agregando un Helm Chart Repository
+
+Vamos a agregar el repositorio de chart de Helm para poder instalar los chart que queramos.
+
+~~~
+helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+    "stable" has been added to your repositories
+~~~
+
+Una vez agregado podemos listar los chart que podemos instalar con el siguiente comando:
+
+~~~
+helm search repo stable
+~~~
+
+Nos saldrá una lista de repositorios estables.
+
