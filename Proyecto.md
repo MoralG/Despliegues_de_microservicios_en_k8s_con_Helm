@@ -1,7 +1,5 @@
 # Despliegues de microservicios en k8s con Helm (y OpenShift)
 
-### Introducción
-
 Helm es un administrador de paquetes para Kubernetes, que ayuda en el proceso de gestión de versiones a desplegar, su empaquetado, proceso de release (forward, rollback, upgrade), etc... de una manera más fácil y rápida.
 
 Estos paquetes se denominan chart, los cuales son una colección de ficheros que describen un conjunto de recursos del API de Kubernetes. Un ejemplo comparable para entenderlo sería el caso del `apt` o `yum` o otros administradores de paquetes de distribuciones de linux pero para Kubernetes.
@@ -16,11 +14,13 @@ Las claves de la utilización de Helm son:
 * Instalar automáticamente dependencias de software.
 * Gestionar el ciclo de vida de despliegue de chart que han sido instaladas con Helm.
 
-### Requisitos previos
+#### Requisitos previos
+
+-------------------
 
 * Un clúster de Kubernetes en la versión 1.8 o posterior, con el control de acceso en roles (RBAC) hablitado.
 
-###### [Instalación Kubernetes con Kubeadm]()
+###### [Instalación Kubernetes con Kubeadm](https://github.com/MoralG/Trabajando_con_Kubernetes/blob/master/Trabajando_con_Kubernetes.md)
 
 ###### Comprobar la versión de Kubernetes:
 ~~~
@@ -28,6 +28,8 @@ kubectl version
     Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2",   GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean",   BuildDate:"2020-04-16T11:56:40Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
     Server Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2",   GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean",   BuildDate:"2020-04-16T11:48:36Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
 ~~~
+
+--------------------------------------
 
 * Tener la herramienta de líneas de comando `kubectl` instalada en su equipo local, configurada para poder conectarse al clúster.
 
@@ -37,6 +39,8 @@ kubectl cluster-info
     Kubernetes master is running at https://10.0.0.10:6443
     KubeDNS is running at https://10.0.0.10:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 ~~~
+
+----------------
 
 ### Instalación de Helm
 
@@ -98,9 +102,11 @@ stable/ambassador                    	5.3.1        	0.86.1                 	A He
 .
 ~~~
 
+## Guía rápida
+
 ### Instalando un Chart oficial
 
-Vamos a instalar un chart del repositorio oficial de Helm, para hacer esto tenemos actializar primero la información de los chart disponibles localmentem para descargar si ha habido cambios.
+Vamos a instalar un chart del repositorio oficial de Helm, para hacer esto tenemos que actualizar primero la información de los chart disponibles localmente, para descargar, si ha habido cambios.
 
 ~~~
 helm repo update
@@ -146,13 +152,13 @@ Para instalar un chart tenemos que utilizar el comando `helm install`.
 ###### [Para saber más sobre los comandos de helm]() o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto, ejemplo `helm install -h`
 -------------------------------------------
 
-Vamos a indicarle un el nombre de **maria** a nuestro chart, pero podemos utilizar la flags `--generate-name`para asignarle uno automáticamente.
+Vamos a asignarle el nombre de **maria** a nuestro chart, pero podemos utilizar la flags `--generate-name`para asignarle uno automáticamente.
 
 ~~~
 helm install maria stable/mysql
 ~~~
 
-Al instalar dicho chart,en el caso de mysql, nos sale una información del chart, como se muestra a continuación: 
+Al instalar dicho chart, en el caso de mysql, nos sale una información del chart, como se muestra a continuación: 
 
 ~~~
 NAME: maria
@@ -191,6 +197,51 @@ To connect to your database directly from outside the K8s cluster:
     mysql -h ${MYSQL_HOST} -P${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD}
 ~~~
 
+> **NOTA**: Si queremos ver la opciones configurables de un chart, podemos usar `helm show values <nombre_chart>`
+> ~~~
+> helm show values stable/mariadb
+> ## Global Docker image parameters
+> ## Please, note that this will override the image parameters, including dependencies, configured to use > the global value
+> ## Current available global Docker image parameters: imageRegistry and imagePullSecrets
+> ##
+> # global:
+> #   imageRegistry: myRegistryName
+> #   imagePullSecrets:
+> #     - myRegistryKeySecretName
+> #   storageClass: myStorageClass
+> 
+> ## Use an alternate scheduler, e.g. "stork".
+> ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+> ##
+> # schedulerName:
+> 
+> ## Bitnami MariaDB image
+> ## ref: https://hub.docker.com/r/bitnami/mariadb/tags/
+> ##
+> image:
+>   registry: docker.io
+>   repository: bitnami/mariadb
+>   tag: 10.3.22-debian-10-r27
+> .
+> .
+> .
+> ~~~
+> Sabiendo las opciones que podemos configurar, podemos modificarlar de dos maneras:
+> * Indicandole los parámetros en un fichero `.yaml` y luego indicarle dicho fichero en la instalación del chart.
+>
+> Creamos el fichero `yaml` indicandole las opciones
+> ~~~
+> echo '{mariadbUser: usuario1, mariadbDatabase: usuario_bd}' > prueba.yaml
+> ~~~
+> Indicamos el fichero `yaml` en la instalación, con el parámetro `-f`
+> ~~~
+> helm install -f prueba.yaml stable/mariadb --generate-name
+> ~~~
+> * Le indicamos las opciones con el parametro `--set`, en el moemnto de la instalación
+> ~~~
+> helm install stable/mariadb --generate-name --set name=usuario1
+> ~~~
+
 Ya tenemos instalado nuestro chart y nos muestra varia información, como la descripción, el nombre, el namespace, etc. Pero además nos muestra la instrucciones para conectarse a la base de datos. 
 
 Para ver los chart que estan lanzados con Helm podemos utilizar el comando `helm ls`.
@@ -200,6 +251,33 @@ Para ver los chart que estan lanzados con Helm podemos utilizar el comando `helm
 helm ls
     NAME 	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP     VERSION
     maria	default  	1       	2020-04-23 17:39:05.877933281 +0000 UTC	deployed	mysql-1.6.3	5.7.28  
+~~~
+### Actualizando un versión
+
+Cuando se lanza una nueva versión de un chart, cuando desea cambiar la configuración de este, podemos usar `helm upgrade`
+
+Una actualización toma una versión existente y la actualiza de acuerdo con la información que proporciones, en el caso de Helm solo se actualiza las cosas qie no han cambiado desde la última versión.
+
+En este caso, para ver un ejemplo, vamos a cambiar la configuración del chart instalado anteriormente. Vamos a crear un fichero `yaml` con la opción `mariadbUser` modificada y creareamos una nueva versión.
+
+~~~
+echo '{mariadbUser: usuario1}' > prueba.yaml
+~~~
+
+~~~
+helm upgrade -f prueba.yaml maria stable/mariadb
+~~~
+
+~~~
+helm get values maria
+    USER-SUPPLIED VALUES:
+    mariadbUser: usuario1
+~~~
+
+~~~
+helm history maria
+    REVISION	UPDATED                 	STATUS     	CHART         	APP VERSION	DESCRIPTION            
+    1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
 ~~~
 
 ### Desinstalando una versión
@@ -253,7 +331,8 @@ Si hemos borrado una versión de un chart y por consiguiente, no nos sale con el
 ~~~
 helm history maria
     REVISION	UPDATED                 	STATUS     	CHART      	APP VERSION	DESCRIPTION            
-    1       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	5.7.28     	Uninstallation complete
+    1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete 
+    2       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	    5.7.28     	Uninstallation complete
 ~~~
 
 Sabiendo esto vamos a realizar el **rollback**.
@@ -278,6 +357,40 @@ También podemos ver con `helm history` que nos aparece la revisión 1 desinstal
 ~~~
 helm history maria
     REVISION	UPDATED                 	STATUS     	CHART      	APP VERSION	DESCRIPTION            
-    1       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	5.7.28     	Uninstallation complete
-    2       	Thu Apr 23 17:51:41 2020	deployed	mysql-1.6.3	5.7.28     	Uninstallation complete
+    1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete 
+    2       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	    5.7.28     	Uninstallation complete
+    3       	Thu Apr 23 17:51:41 2020	deployed	mysql-1.6.3	    5.7.28     	Uninstallation complete
 ~~~
+
+### Creando Charts en Helm
+
+En esta guía vamos a desarrollar nuestros propios Charts en Helm. Es recomentable que se mire antes la [Instalación y configuración]() de Helm y la [Guía rápida]().
+
+Si quiere saber el funcionamiento de algunos comando de Helm puede ir a la [Guía de comando]() de Helm.
+
+Un Chart es una colección de ficheros que describen un cojunto de recursos de Kubernetes. Podemos usar un solo gráfico para implementar un pod memcached, o si nos vamos a algo mas complicado, una pila completa de aplicaciones web con servidores HTTP, bases de datos, cache, etc.
+
+Al crear un Chart, dispondremos de unos directorios en forma de árbol, os cuales podemos modificar y una vez terminado la modificación, empaquetarlo en archivos versionados para su implementación.
+
+Antes de empezar a crear Charts, vamos a ver algunos ficheros importantes que vamos a utilizar.
+
+> **wordpress/**, Directorio padre donde se almacenaran todos los ficheros del que componen el chart, se llamara igual que el chart.
+> 
+>> **Chart.yaml**, Fichero yaml que contiene la información del chart.
+>>
+>> **LICENSE**, Fichero opcional que contiene la licencia del chart.
+>>
+>> **README.md**, Fichero utilizado para la descripción del chart.
+>>
+>> **values.yaml**, Fichero de configuración de los distintos valores del chart.
+>>
+>> **values.schema.json**, Fichero opcional JSON para imponer una estructura en el archivo values.yaml.
+>>
+>> **charts/**, Directorio que contiene las dependencias del chart.
+>>
+>> **crds/**, Directorio que contiene las definiciones de recursos personalizados.
+>>
+>> **templates/**, Directorio donde se almacenan las plantillas y donde se generará ficheros de Kubernetes.
+>>
+>> **templates/NOTES.txt**, Fichero opcional sin formato, que contiene breves notas de uso.
+
