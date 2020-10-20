@@ -42,7 +42,7 @@ kubectl cluster-info
 
 ----------------
 
-### Instalación de Helm
+## Instalación de Helm
 
 Vamos a instala la herramienta de linea de comando `helm` en nuestro equipo local de trabajo.
 
@@ -362,7 +362,7 @@ helm history maria
     3       	Thu Apr 23 17:51:41 2020	deployed	mysql-1.6.3	    5.7.28     	Uninstallation complete
 ~~~
 
-### Creando Charts en Helm
+## Creando Charts en Helm
 
 En esta guía vamos a desarrollar nuestros propios Charts en Helm. Es recomentable que se mire antes la [Instalación y configuración]() de Helm y la [Guía rápida]().
 
