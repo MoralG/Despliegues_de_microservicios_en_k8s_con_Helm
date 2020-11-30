@@ -22,9 +22,7 @@ En resumen, la principal función de Helm es definir, instalar y actualizar apli
 
 -------------------
 
-* Un clúster de Kubernetes en la versión 1.8 o posterior, con el control de acceso en roles (RBAC) hablitado.
-
-###### [Instalación Kubernetes con Kubeadm](https://github.com/MoralG/Trabajando_con_Kubernetes/blob/master/Trabajando_con_Kubernetes.md)
+* Un clúster de Kubernetes en la versión 1.8 o posterior, con el control de acceso en roles (RBAC) hablitado. Si necesita ayuda para instalar Kubernetes con kubeadm [LEER AQUÍ](https://github.com/MoralG/Trabajando_con_Kubernetes/blob/master/Trabajando_con_Kubernetes.md)
 
 ###### Comprobar la versión de Kubernetes:
 ~~~
@@ -110,7 +108,14 @@ stable/ambassador                    	5.3.1        	0.86.1                 	A He
 
 ### Instalando un Chart oficial
 
-Vamos a instalar un chart del repositorio oficial de Helm, para hacer esto tenemos que actualizar primero la información de los chart disponibles localmente, para descargar, si ha habido cambios.
+Vamos a instalar un chart del repositorio oficial de Helm, para hacer esto tenemos que actualizar primero la información de los chart disponibles en el repositorio `stable` con el comando `helm repo update`.
+
+-------------------------------------------
+#### Estructura:
+* **`helm repo update [flags]`**
+
+###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_repo_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+-------------------------------------------
 
 ~~~
 helm repo update
@@ -127,7 +132,7 @@ Antes de empezar a instalar, tenenemos que saber el nombre del chart, para eso u
 #### Estructura:
 * **`helm search repo [keyword] [flags]`**
 
-###### [Para saber más sobre los comandos de helm]() o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto, ejemplo `helm install -h`
+###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_search_repo/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 -------------------------------------------
 
 Vamos a buscar la **release stable** de mysql, pero si queremos otras versiones podemos utilizar la flags `--devel` para prerelease o `--version [version]` para que nos muestre la version concreta.
@@ -153,7 +158,7 @@ Para instalar un chart tenemos que utilizar el comando `helm install`.
 ##### Estructura:
 * **`helm install [NAME] [CHART] [flags]`**
 
-###### [Para saber más sobre los comandos de helm]() o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto, ejemplo `helm install -h`
+###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_install/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 -------------------------------------------
 
 Vamos a asignarle el nombre de **maria** a nuestro chart, pero podemos utilizar la flags `--generate-name`para asignarle uno automáticamente.
@@ -292,7 +297,7 @@ Para desinstalar una versión tenenemos que utilizar el comando `helm uninstall`
 ##### Estructura:
 * **`helm uninstall RELEASE_NAME [...] [flags]`**
 
-###### [Para saber más sobre los comandos de helm]() o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto, ejemplo `helm install -h`
+###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_plugin_uninstall/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 -------------------------------------------
 
 Vamos a realizar la desinstalación del chart **maria** pero vamos a añadir el flag `--feep-history` para mantener el historial de versión.
@@ -327,7 +332,7 @@ Vamos a realizar un rollback para revertir una release a una versión anterior c
 ##### Estructura:
 * **`helm rollback <RELEASE> [REVISION] [flags]`**
 
-###### [Para saber más sobre los comandos de helm]() o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto, ejemplo `helm install -h`
+###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_rollback/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 -------------------------------------------
 
 Si hemos borrado una versión de un chart y por consiguiente, no nos sale con el comando `helm ls` vamos a tener que utilizar `helm history`.
@@ -374,78 +379,509 @@ Si quiere saber el funcionamiento de algunos comando de Helm puede ir a la [Guí
 
 Un Chart es una colección de ficheros que describen un cojunto de recursos de Kubernetes. Podemos usar un solo chart para implementar un pod memcached, o si nos vamos a algo mas complicado, una pila completa de aplicaciones web con servidores HTTP, bases de datos, cache, etc.
 
-Es bueno tener unas prácticas recomendadas para realizar chart de Helm, por eso vamos a ir paso a paso creando una aplicación en python y dando recomendaciones.
+Es bueno tener unas prácticas recomendadas para realizar crear un chart de Helm, por eso vamos a ir paso a paso creando una aplicación en php y dando recomendaciones.
 
 Vamos a empezar creando el chart:
 
-> **debian@cliente:***~* **$** ``helm create appPython3``
+> **debian@cliente:***~* **$** ``helm create app-python3``
 ~~~
-Creating appPython3
+Creating app-python3
 ~~~
 
 Al crear un Chart, dispondremos de unos directorios en forma de árbol, los cuales podemos modificar y una vez terminado la modificación, empaquetarlo en archivos versionados para su implementación.
 
 ~~~
-appPython3/
+app-crud/
 ├── charts
 |   └──
 ├── Chart.yaml
 ├── templates
 │   ├── deployment.yaml
 │   ├── _helpers.tpl
-│   ├── hpa.yaml
 │   ├── ingress.yaml
 │   ├── NOTES.txt
-│   ├── serviceaccount.yaml
 │   ├── service.yaml
 │   └── tests
 │       └── test-connection.yaml
 └── values.yaml
 
-3 directories, 10 files
+3 directories, 8 files
 ~~~
 
 Vamos a repasar los ficheros y directorios necesarios para realizar un buen despligue en Kubernetes.
 
 |Objeto          | Descripción
 |----------------|-------------------------------
+|**charts/**| Directorio donde de añadiran los chart que necesitemos como dependencias.
 |**Chart.yaml**| Fichero yaml que contiene la información del chart.
 |**README.md**| Fichero utilizado para la descripción del chart.
-|**values.yaml**| Fichero de configuración de los distintos valores del chart.
-|**templates/**| Directorio donde se almacenan las plantillas y donde se generará ficheros de Kubernetes.
-|**templates/NOTES.txt**| Fichero opcional sin formato, que contiene breves notas de uso.
-|**dependences.yaml**| Dichero que no se genera al crear el chart pero que es recomendable tener si vamos a ñadir dependecias.
+|**values.yaml**| Fichero que contiene los distintos valores por defectos que le pasamos al chart.
+|**templates/**| Directorio donde añadiremos los recursos de Kubernetes. Añadiremos los diferentes objetos mediante ficheros yaml.
+|**templates/NOTES.txt**| Fichero opcional, que contiene breves notas de uso, estas se muestran al terminar el comando `helm install`.
+|**templates/_helpers.tpl**| Fichero opcional, utilizado para añadir valores que pueden ser reutilizables en todo el chart.
+
+A partir de aquí tenemos que preguntarnos que vamos a necesitar.
+
+* ¿Que imagen o imagenes vamos a utilizar?
+* ¿Que dependencias necesitamos definir?
+* ¿Para nuestra aplicación necesitamos volumenes persistentes?
+
+### Fichero Chart.yaml
+
+Para empezar vamos a modificar los metadatos del fichero `Chart.yaml`.
+
+> **debian@cliente:***~/app-crud* **$** `nano Chart.yaml`
+
+```yaml
+apiVersion: v1
+appVersion: "1.0.0"
+description: Aplicacion CRUD en Helm chart con express.js y mongodb.
+name: app-crud
+version: 0.1.0
+sources:
+- https://github.com/MoralG/appCRUD
+maintainers:
+- name: moralg
+  email: ale95mogra@gmail.com
+icon: https://res.cloudinary.com/practicaldev/image/fetch/s--5IllY723--/c_imagga_scale,f_auto,fl_progressive,h_900,q_auto,w_1600/https://thepracticaldev.s3.amazonaws.com/i/a3exuz06e9h212pandfr.png
+```
+
+Ahora vamos a definir las dependencias, dado que nuestra aplicación necesita la base de datos mongodb, debemos especificarla en el fichero `Chart.yaml` con el campo `dependencies`.
+
+```yaml
+dependencies:
+- name: mongodb
+ version: latest
+ repository: https://kubernetes-charts.storage.googleapis.com/
+ condition: mongodb.enabled
+```
+
+Ya tenemos las dependencias definidas, ahora hay que sincronizar las dependencias deseadas y las dependencias reales almacenadas en el directorio `chart/`, para esto vamos a utilizar el comando `helm dep update`.
+
+-------------------------------------------
+##### Estructura:
+* **`helm dep update CHART [flags]`**
+
+###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_dependency_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+-------------------------------------------
+
+> **debian@cliente:***~/app-crud* **$** `helm dep update`
+
+```shell
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "django" chart repository
+...Successfully got an update from the "bitnami" chart repository
+...Unable to get an update from the "stable" chart repository (https://charts.helm.sh/stable):
+        Get "https://charts.helm.sh/stable/index.yaml": dial tcp: lookup charts.helm.sh on 192.168.202.2:53: server misbehaving
+Update Complete. ⎈Happy Helming!⎈
+Saving 1 charts
+Downloading mongodb from repo https://kubernetes-charts.storage.googleapis.com/
+Deleting outdated charts
+```
+
+Como muestra en la salida del comando anterior, un chart se ha guardado. Comprobamos que se ha guardado en el directorio `chart/`.
+
+> **debian@cliente:***~/app-crud* **$** `ls -l charts/`
+
+~~~
+-rw-r--r-- 1 debian debian 5742 Nov 30 09:27 mongodb-2.0.5.tgz
+~~~
+
+### Fichero deployment.yaml
+
+Lo siguiente que tenemos que hacer es modificar un poco el fichero `deployment.yaml`, que es el recurso que se va a encargar de definir el control de réplicas, escabilidad de pods, etc...
+
+Añadimos algunas label, para tener un control y una comodidad a la hora de listar y trabajar con los objetos que vamos a crear.
+
+```yaml
+labels:
+  app: {{ template "express-crud.name" . }}
+  chart: {{ template "express-crud.chart" . }}
+  release: {{ .Release.Name }}
+  heritage: {{ .Release.Service }}
+```
+
+Añadimos variables de entornos configurar los valores del chart de mongodb.
+
+```yaml
+env:
+- name: DATABASE_USER
+  value: '{{ .Values.mongodb.mongodbUsername }}'
+- name: DATABASE_NAME
+  value: '{{ .Values.mongodb.mongodbDatabase }}'
+- name: DATABASE_HOST
+  value: '{{ .Release.Name }}-mongodb'
+- name: DATABASE_PORT
+  value: '27017'
+- name: DATABASE_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Release.Name }}-mongodb
+      key: mongodb-password
+```
+
+> Valores del fichero `values.yaml` referentes a la parte de `Values.mongodb`:
+> ```yaml
+> mongodb:
+>   mongodbRootPassword:
+>   mongodbUsername: admin
+>   mongodbPassword:
+>   mongodbDatabase: test
+> ```
+
+Cambiamos el parámetro `image` para actualizar el chart de Helm con una nueva versión de la aplicación simplemente cambiando el valor en `Chart.yaml`.
+
+```yaml
+image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+```
+
+> Valores del fichero `values.yaml` referentes a la parte de `Values.image`:
+> ```yaml
+> image:
+>   repository: jainishshah17/express-mongo-crud
+>   # tag: 1.0.1
+>   pullPolicy: IfNotPresent
+> ```
+
+Añadimos las siguientes lineas para poder modificar los valores referente al puerto internos, protocolo, etc, desde el fichero `values.yaml`.
+
+```yaml
+ports:
+- name: {{ .Values.service.name }}
+  containerPort: {{ .Values.service.internalPort }}
+  protocol: {{ .Values.service.protocol }}
+```
+
+Siempre es bueno agregar una prueba liveness y readiness para verificar el estado continuo de la aplicación. Para esto se utiliza las sondas.
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: {{ .Values.livenessProbe.path }}
+    port: {{ .Values.livenessProbe.port }}
+  initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+  periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+  failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+readinessProbe:
+  httpGet:
+    path: {{ .Values.readinessProbe.path }}
+    port: {{ .Values.readinessProbe.port }}
+  initialDelaySeconds: { .Values.readinessProbe.initialDelaySeconds }}
+  periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+  failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+```
+
+> Valores del fichero `values.yaml` referentes a la parte de `Values.livenessProbe` y `Values.readinessProbe`:
+> ```yaml
+> livenessProbe:
+>   path: '/health'
+>   port: http
+>   initialDelaySeconds: 60
+>   periodSeconds: 10
+>   failureThreshold: 10 
+>   
+> readinessProbe:
+>   path: '/health'
+>   port: http
+>   initialDelaySeconds: 60
+>   periodSeconds: 10
+>   failureThreshold: 10 
+> ```
+
+Por último vamos a añadir un `initContainers` para mantener en pendiente el inicio de nuestra aplicación hasta que la base de datos esté en funcionamiento.
+
+```yaml
+initContainers:
+- name: wait-for-db
+  image: "{{ .Values.initContainerImage }}"
+  command:
+  - 'sh'
+  - '-c'
+  - >
+    until nc -z -w 2 {{ .Release.Name }}-mongodb 27017 && echo mongodb ok;
+      do sleep 2;
+    done
+```
+Esto hace que levante un contenedor con la imagen `alpine:3.6` y que ejecute en el 
+## DESCRIBIR EL COMANDO.
+
+> Valores del fichero `values.yaml` referentes a la parte de `Values.initContainers`:
+> ```yaml
+> initContainerImage: "alpine:3.6"
+> ```
+
+### Fichero service.yaml
+
+Ya tenemos nuestro fichero de despliegue listo, ahora vamos a modificar el fichero `service.yaml` para exponer nuestra aplicación al exterior.
+Un servicio permite que la aplicación reciba trafico a través de una dirección IP. Los servicios se pueden exponer de diferentes formas especificando un tipo:
+
+
+|Tipo            | Descripción
+|----------------|-------------------------------
+|**ClusterIP**| Solo se puede acceder al servicio mediante una IP interna desde el cluster.
+|**NodePort**| Se puede acceder al servicio desde fuera del clúster a través de NodeIP y NodePort
+|**LoadBalancer**| Se puede acceder al servicio desde fuera del clúster a través de un equilibrador de carga externo. Puede ingresar a la aplicación.
+
+En nuestro caso vamos a utilizar LoadBalancer para la aplicación CRUD, ya que necesitamos acceder desde el exterior y el servicio de mongodb será ClusterIP, porque este solo tiene que poder tener acceso la aplicación CRUD dentro del cluster.
+
+Modificamos el fichero `service.yaml` para indicarle los valores de tipo de servicios, puerto externo, etc.
+
+```yaml
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.externalPort }}
+      targetPort: http
+      protocol: {{ .Values.service.protocol }}
+      name: {{ .Values.service.name }}
+```
+
+
+> Valores del fichero `values.yaml` referentes a la parte de `Values.service`:
+> ```yaml
+> service:
+>   name: http
+>   type: LoadBalancer
+>   internalPort: 3000
+>   externalPort: 80
+>   protocol: TCP
+> ```
+
+Añadimos algunas label, para tener un control y una comodidad a la hora de listar y trabajar con los objetos que vamos a crear.
+
+```yaml
+labels:
+  app: {{ template "express-crud.name" . }}
+  chart: {{ template "express-crud.chart" . }}
+  release: {{ .Release.Name }}
+  heritage: {{ .Release.Service }}
+```
+
+### Fichero values.yaml
+
+Definir la mayoría de nuestras configuraciones en el fichero `values.yaml` es una práctica para ayudar a mantener los chart Helm en un buen estado de mantenimiento, además de ser mas fácil cambiar a otra configuración.
+
+Vamos a ver como ha quedado el fichero `values.yaml`.
+
+```yaml
+# Default values for app-crud.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+#------------------------------------------------
+
+initContainerImage: "alpine:3.6"
+imagePullSecrets:
+replicaCount: 1
+
+#------------------------------------------------
+
+## Configuración de los valores referentes a la imagen de la aplicación CRUD
+
+image:
+  repository: jainishshah17/express-mongo-crud
+  # tag: 1.0.1
+  pullPolicy: IfNotPresent
+
+#------------------------------------------------
+
+## Configuración de la dependencia de mongodb
+## ref: https://github.com/kubernetes/charts/blob/master/stable/mongodb/README.md
+##
+mongodb:
+  enabled: true
+  image:
+    tag: 3.6.3
+    pullPolicy: IfNotPresent
+  persistence:
+    size: 50Gi
+  mongodbExtraFlags:
+  - "--wiredTigerCacheSizeGB=1"
+  mongodbRootPassword:
+  mongodbUsername: admin
+  mongodbPassword:
+  mongodbDatabase: test
+
+#------------------------------------------------
+
+## Configuración de los valores de Readiness and Liveness Probes (deployment.yaml)
+
+livenessProbe:
+  path: '/health'
+  port: http
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  failureThreshold: 10 
+  
+readinessProbe:
+  path: '/health'
+  port: http
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  failureThreshold: 10 
+
+#------------------------------------------------
+
+# Configuración de valores referente a servicios (service.yaml, deployment.yaml)
+
+service:
+  name: http
+  type: LoadBalancer
+  internalPort: 3000
+  externalPort: 80
+  protocol: TCP
+
+#------------------------------------------------
+
+ingress:
+  enabled: false
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+```
+
+Al tener todo configurado, solo nos faltará instalar el chart pero antes examinaremos el chart para detectar posibles problemas con el comando `helm lint`
+
+-------------------------------------------
+#### Estructura:
+* **`helm lint PATH [flags]`**
+
+###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_lint/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+-------------------------------------------
+
+
+> **debian@cliente:***~/app-crud* **$** `helm lint ./`
+```shell
+==> Linting ./
+
+1 chart(s) linted, 0 chart(s) failed
+```
+
+Cuando nos muestre el mensaje con 0 fallos, podemos realizar la instalación.
+
+Es posible que salgan algunos fallitos referidos a la `apiVersion`, ya que dependiendo de que versión de helm utilices y dependiendo de la dependencia que elijas puede variar.
+> Ejemplo de un error que me salió a mi:
+>
+> ~~~
+> Chart.yaml: dependencies are not valid in the Chart file with apiVersion 'v1'. They are valid in apiVersion 'v2'`
+> ~~~
+>
+> Para arreglar este error tan solo deberiamos de cambiar en el fichero `Chart.yaml` la version del campo `apiVersion` a `v2`.
+
+Vamos a instalar el helm con el comando `helm install`.
+
+> **debian@cliente:***~/app-crud* **$** `helm install app-crud ./`
+
+~~~
+NAME: app-crud
+LAST DEPLOYED: Mon Nov 30 12:50:21 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+1. Get the application URL by running these commands:
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get svc -w app-crud-express-crud'
+  export SERVICE_IP=$(kubectl get svc --namespace default app-crud-express-crud -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  echo http://$SERVICE_IP:80
+~~~
+
+> Este mensaje que nos muestra después de `NOTES` lo podemos nosotros modificar editando el fichero `template/NOTES.txt`
+
+Como podemos ver, se ha instalado con exito y lo podemos listar con `helm list`.
+
+> **debian@cliente:***~/app-crud* **$** `helm list`
+
+~~~
+NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                APP VERSION
+app-crud        default         1               2020-11-30 12:50:21.429099337 +0000 UTC deployed        express-crud-0.1.0   1.0.1
+~~~
+
+Y podemos ver con el comando `kubectl get all` que se han creado los recursos que hemos ido editando en esta práctica:
+
+> **debian@cliente:***~/app-crud* **$** `kubectl get all`
+
+~~~
+NAME                                         READY   STATUS    RESTARTS   AGE
+pod/app-crud-express-crud-565b97d46d-knwkh   1/1     Running   0          5m12s
+pod/app-crud-mongodb-5cc7c8c7d7-pfpdn        1/1     Running   0          5m12s
+
+NAME                            TYPE           CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+service/app-crud-express-crud   LoadBalancer   10.109.130.120   <pending>     80:30853/TCP   5m12s
+service/app-crud-mongodb        ClusterIP      10.111.146.0     <none>        27017/TCP      5m12s
+service/kubernetes              ClusterIP      10.96.0.1        <none>        443/TCP        36d
+
+NAME                                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/app-crud-express-crud   1/1     1            1           5m12s
+deployment.apps/app-crud-mongodb        1/1     1            1           5m12s
+
+NAME                                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/app-crud-express-crud-565b97d46d   1         1         1       5m12s
+replicaset.apps/app-crud-mongodb-5cc7c8c7d7        1         1         1       5m12s
+~~~
+
+Para acceder a nuestra aplicación utilizaremos el puerto externo del servicio de Loadbalancer.
+
+![appCRUD](image/appCRUD.png)
+
+![addCRUD](image/addCRUD.png)
+
+![listCRUD](image/listCRUD.png)
+
+-----------------------
+
+## ACTUALIZACION DEL CHART
+
+-----------------------
+
+## ROLLBACK DEL CHART
+
+-----------------------
+
+## DESPLIEGUE DE PARTE PRACTICA 2
+
+-----------------------
+
+## REPO PUBLICO
+
+### Configurar un repositorio privado de Github
 
 Vamos a crear un repositorio en Github
 
-**debian@cliente:***~/appPython3* **$** `helm repo index .`
+**debian@cliente:***~/app-crud* **$** `helm repo index .`
 
-**debian@cliente:***~/appPython3* **$** `ls`
+**debian@cliente:***~/app-crud* **$** `ls`
 ~~~
 charts  Chart.yaml  index.yaml  templates  values.yaml
 ~~~
 
-**debian@cliente:***~/appPython3* **$** `cat index.yaml `
+**debian@cliente:***~/app-crud* **$** `cat index.yaml `
 ~~~
 apiVersion: v1
 entries: {}
 generated: "2020-11-12T10:09:54.715010553Z"
 ~~~
 
-**debian@cliente:***~/appPython3* **$** `git init`
+**debian@cliente:***~/app-crud* **$** `git init`
 ~~~
-Initialized empty Git repository in /home/debian/appPython3/.git/
+Initialized empty Git repository in /home/debian/app-python3/.git/
 ~~~
 
-**debian@cliente:***~/appPython3* **$** `echo "Aplicación en python con base de dato Postgres creada con Helm para Kubernetes." > README.md`
+**debian@cliente:***~/app-crud* **$** `echo "Aplicación en python con base de dato Postgres creada con Helm para Kubernetes." > README.md`
 
-**debian@cliente:***~/appPython3* **$** `git branch -M master`
+**debian@cliente:***~/app-crud* **$** `git branch -M master`
 
-**debian@cliente:***~/appPython3* **$** `git remote add origin https://github.com/MoralG/appPython3.git`
+**debian@cliente:***~/app-crud* **$** `git remote add origin https://github.com/MoralG/app-python3.git`
 
-**debian@cliente:***~/appPython3* **$** `git add *`
+**debian@cliente:***~/app-crud* **$** `git add *`
 
-**debian@cliente:***~/appPython3* **$** `git commit -m "Generar repositorio para Helm"`
+**debian@cliente:***~/app-crud* **$** `git commit -m "Generar repositorio para Helm"`
 ~~~
 [master 3cfa144] Generar repositorio para Helm
  Committer: Debian <debian@cliente.novalocal>
@@ -476,7 +912,7 @@ After doing this, you may fix the identity used for this commit with:
  create mode 100644 README.md
 ~~~
 
-**debian@cliente:***~/appPython3* **$** `git push -u origin master`
+**debian@cliente:***~/app-crud* **$** `git push -u origin master`
 ~~~
 Username for 'https://github.com': moralg
 Password for 'https://moralg@github.com': 
@@ -486,17 +922,17 @@ Delta compression using up to 2 threads
 Compressing objects: 100% (14/14), done.
 Writing objects: 100% (15/15), 5.14 KiB | 2.57 MiB/s, done.
 Total 15 (delta 0), reused 0 (delta 0)
-To https://github.com/MoralG/appPython3.git
+To https://github.com/MoralG/app-python3.git
    ed95ff7..3cfa144  master -> master
 Branch 'master' set up to track remote branch 'master' from 'origin'.
 ~~~
 
-**debian@cliente:***~/appPython3* **$** `helm repo add my-repo https://raw.githubusercontent.com/moralg/appPython3/master`
+**debian@cliente:***~/app-crud* **$** `helm repo add my-repo https://raw.githubusercontent.com/moralg/app-python3/master`
 ~~~
 "my-repo" has been added to your repositories
 ~~~
 
-**debian@cliente:***~/appPython3* **$** `helm repo update`
+**debian@cliente:***~/app-crud* **$** `helm repo update`
 ~~~
 Hang tight while we grab the latest from your chart repositories...
 ...Successfully got an update from the "my-repo" chart repository
@@ -504,380 +940,9 @@ Hang tight while we grab the latest from your chart repositories...
 Update Complete. ⎈Happy Helming!⎈
 ~~~
 
-**debian@cliente:***~/appPython3* **$** `helm repo list`
+**debian@cliente:***~/app-crud* **$** `helm repo list`
 ~~~
 NAME   	URL                                                       
 stable 	https://kubernetes-charts.storage.googleapis.com/         
-my-repo	https://raw.githubusercontent.com/moralg/appPython3/master
-~~~
-
-A partir de aquí tenemos que preguntarnos que vamos a necesitar.
-
-* ¿Que imagen o imagenes vamos a utilizar?
-* ¿Que dependencias necesitamos definir?
-* ¿Para nuestra aplicación necesitamos volumenes persistentes?
-
-Para empezar vamos a modificar los metadatos del fichero `Chart.yaml`.
-
-```yaml
-apiVersion: v1
-appVersion: 1.0.0
-name: appPython3
-description: Aplicación en python con base de datos Postgresql
-version: 0.1.0
-type: application
-sources: 
-- https://github.com/MoralG/appPython3
-maintainers:
-- name: moralg
-  email: ale95mogra@gmail.com
-icon: https://www.quytech.com/blog/wp-content/uploads/2020/06/python-web-development.jpg
-```
-
-Ahora vamos a definir las dependencias, dado que nuestra aplicación necesita la base de datos postgresql, debemos especificarla en la lista de dependencias del fichero `requirement.yaml`. Este lo tenemos que crear en el directorio de nuestro chart.
-
-**debian@cliente:***~/appPython3* **$** `touch dependeces.yaml`
-```yaml
-dependencies:
-- name: postgresql-ha #Nombre del chart de postgresql, debe coincidir con el nombre del fichero Chart.yaml de ese chart.
-  version: 11.9.0 #Versión del chart que vamos a utilizar.
-  repository: https://charts.bitnami.com/bitnami #Repositiorio del que vamos a obtener postgresql.
-  condition: postgresql-ha.enabled #Condición para que este activa la dependencia antes que la app.
-```
-
-**debian@cliente:***~/appPython3* **$** `helm dep update`
-
-Lo siguiente que tenemos que hacer es modificar un poco el fichero `deployment.yaml` que se ha creado con el comando `helm create`.
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{ include "appPython3.fullname" . }}
-  labels:
-    app: {{ template "appPython3.name" . }}
-    chart: {{ template "appPython3.chart" . }}
-    release: {{ .Release.Name }}
-spec:
-{{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-{{- end }}
-  selector:
-    matchLabels:
-      {{- include "appPython3.selectorLabels" . | nindent 6 }}
-  template:
-    metadata:
-    {{- with .Values.podAnnotations }}
-      annotations:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-      labels:
-        {{- include "appPython3.selectorLabels" . | nindent 8 }}
-    spec:
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "appPython3.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: {{ .Values.service.name }}
-              containerPort: {{ .Values.service.internalPort }}
-              protocol: {{ .Values.service.protocol }}
-          readinessProbe:
-            httpGet:
-              path: {{ .Values.readinessProbe.path }}
-              port: {{ default .Values.service.name .Values.readinessProbe.port }}
-            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.readinessProbe.successThreshold }}
-            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
-          livenessProbe:
-            httpGet:
-              path: {{ .Values.livenessProbe.path }}
-              port: {{ default .Values.service.name .Values.livenessProbe.port }}
-            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-            successThreshold: {{ .Values.livenessProbe.successThreshold }}
-            failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-```
-Añadimos algunas label, para tener un control y una comodidad a la hora de listar y trabajar con los objetos que vamos a crear
-```yaml
-labels:
-  app: {{ template "appPython3.name" . }}
-  chart: {{ template "appPython3.chart" . }}
-  release: {{ .Release.Name }}
-```
-
-Cambiamos la el parámetro image para actualizar el chart de Helm con una nueva versión de la aplicación simplemente cambiando el valor en Chart.yaml.
-```yaml
-image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-```
-Añadimos las siguientes lineas para podemos modificar la información de los puertos internos desde el fichero `values.yaml`
-```yaml
-ports:
-  - name: {{ .Values.service.name }}
-    containerPort: {{ .Values.service.internalPort }}
-    protocol: {{ .Values.service.internalProtocol }}
-```
-
-Siempre es bueno agregar una prueba de preparación y de vivacidad para verificar el estado continuo de la aplicación. Para esto se utiliza las sondas.
-```yaml
-readinessProbe:
-  httpGet:
-    path: {{ .Values.readinessProbe.path }}
-    port: {{ default .Values.service.name .Values.readinessProbe.port }}
-  initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
-  periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
-  timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
-  successThreshold: {{ .Values.readinessProbe.successThreshold }}
-  failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
-livenessProbe:
-  httpGet:
-    path: {{ .Values.livenessProbe.path }}
-    port: {{ default .Values.service.name .Values.livenessProbe.port }}
-  initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
-  periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
-  timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
-  successThreshold: {{ .Values.livenessProbe.successThreshold }}
-  failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
-```
-
-Ya tenemos nuestro fichero de despliegue listo, ahora vamos a modificar el fichero `service.yaml` para exponer nuestra aplicación al mundo.
-Un servicio permite que la aplicación reciba trafico a través de una dirección IP. Los servicios se pueden exponer de diferentes formas especificando un tipo:
-
-
-|Tipo            | Descripción
-|----------------|-------------------------------
-|**ClusterIP**| Solo se puede acceder al servicio mediante una IP interna desde el cluster.
-|**NodePort**| Se puede acceder al servicio desde fuera del clúster a través de NodeIP y NodePort
-|**LoadBalancer**| Se puede acceder al servicio desde fuera del clúster a través de un equilibrador de carga externo. Puede ingresar a la aplicación.
-
-En nuestro caso vamos a utilizar el tipo de LoadBalancer. Esto lo vamos a expecificar en el fichero `values.yaml`, ahora vamos a crear el fichero``service.yam`.
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: {{ include "appPython3.fullname" . }}
-  labels:
-    app: {{ template "appPython3.name" . }}
-    chart: {{ template "appPython3.chart" . }}
-    release: {{ .Release.Name }}
-spec:
-  type: {{ .Values.service.type }}
-  ports:
-    - port: {{ .Values.service.externalPort }}
-      targetPort: {{ .Values.service.targetPort }}
-      protocol: {{ .Values.service.externalprotocol }}
-      name: {{ .Values.service.externalName }}
-  selector:
-    app: {{ template "appPython3.name" . }}
-    release: {{ .Release.Name }}
-
-```
-
-Añadimos algunas label, para tener un control y una comodidad a la hora de listar y trabajar con los objetos que vamos a crear
-```yaml
-labels:
-  app: {{ template "appPython3.name" . }}
-  chart: {{ template "appPython3.chart" . }}
-  release: {{ .Release.Name }}
-```
-
-```yaml
-ports:
-  - port: {{ .Values.service.externalPort }}
-    targetPort: {{ .Values.service.targetPort }}
-    protocol: {{ .Values.service.externalprotocol }}
-    name: {{ .Values.service.externalName }}
-```
-
-Por útimo, vamos a definir todos los valores de las configuraciones que hemos realizado en los pasos anteriores.
-
-```yaml
-# Default values for appPython3.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-replicaCount: 1
-
-image:
-  repository: jcdemo/flaskapp
-  pullPolicy: IfNotPresent
-  tag: latest
-
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
-## Service Account
-## Ref: https://kubernetes.io/docs/admin/service-accounts-admin/
-##
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-## Configuration values for the postgresql dependency
-## ref: https://github.com/kubernetes/charts/blob/master/stable/mongodb/README.md
-##
-postgresql:
-  enabled: true
-  image:
-    tag: 11.10.0-debian-10-r2
-    pullPolicy: IfNotPresent
-  persistence:
-    size: 1Gi
-  Username: userpostgresql
-  Password: passpostgresql
-  Database: dbpostgresql
-
-
-## Probes
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
-readinessProbe:
-  path: /
-  # port: 9000
-  initialDelaySeconds: 0
-  timeoutSeconds: 1
-  periodSeconds: 10
-  successThreshold: 1
-  failureThreshold: 3
-
-livenessProbe:
-  path: /
-  # port: 9000
-  initialDelaySeconds: 0
-  timeoutSeconds: 1
-  periodSeconds: 10
-  successThreshold: 1
-  failureThreshold: 3
-
-podAnnotations: {}
-
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-service:
-  type: ClusterIP
-  port: 80
-  name: http
-  internalPort: 3000
-  internalProtocol: TCP
-  externalPort: 80
-  targetPort: 
-  externalprotocol: TCP
-  externalName: http
-
-ingress:
-  enabled: false
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths: []
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
-```
-
-
-```yaml
-
-```
-
------------------------
-
-Comprobamos si el chart es correctamente y se puede pasar a instalarlo.
-
-> **debian@cliente:***~/app-python3* **$** `helm lint ./`
-~~~
-==> Linting ./
-[INFO] Chart.yaml: icon is recommended
-
-1 chart(s) linted, 0 chart(s) failed
-~~~
-
-Nos pide que le añadamos el atributo ``icon``.
-> **debian@cliente:***~/app-python3* **$** `nano Chart.yaml`
-~~~
-icon: https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png
-~~~
-
-REalizamos de nuevo la comprobación y nos muestra que esta todo correcto
-> **debian@cliente:***~/app-python3* **$** `helm lint ./`
-~~~
-==> Linting ./
-
-1 chart(s) linted, 0 chart(s) failed
-~~~
-
-Instalamos el chart y los listamos para comprobar su estado.
-> **debian@cliente:***~* **$** ``helm install test1 app-python3/``
-
-> **debian@cliente:***~* **$** ``helm list``
-
-~~~
-NAME    NAMESPACE   REVISION   UPDATED                                   STATU      CHART               APP VERSION
-test1   default     1          2020-11-11 12:35:22.083675424 +0000 UTC   deployed   app-python3-0.1.0   1.0.0
+my-repo	https://raw.githubusercontent.com/moralg/app-python3/master
 ~~~
