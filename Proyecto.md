@@ -937,7 +937,7 @@ NAME            NAMESPACE       REVISION        UPDATED                         
 app-crud        default         1               2020-11-30 12:50:21.429099337 +0000 UTC deployed        express-crud-0.1.0   1.0.1
 ~~~
 
-Y podemos ver con el comando `kubectl get all` que se han creado los recursos que hemos ido editando en esta práctica:
+Y podemos ver con el comando `kubectl get all` que se han creado los objetos que hemos ido editando en esta práctica:
 
 ***debian@cliente:**~/app-crud* **$** `kubectl get all`
 
