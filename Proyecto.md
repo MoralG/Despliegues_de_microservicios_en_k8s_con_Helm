@@ -394,7 +394,7 @@ Es bueno tener unas prácticas recomendadas para realizar crear un chart de Helm
 
 Vamos a empezar creando el chart:
 
-***debian@cliente:***~* **$** ``helm create app-python3``
+***debian@cliente:**~* **$** ``helm create app-python3``
 ~~~
 Creating app-python3
 ~~~
@@ -441,7 +441,7 @@ A partir de aquí tenemos que preguntarnos que vamos a necesitar.
 
 Para empezar vamos a modificar los metadatos del fichero `Chart.yaml`.
 
-***debian@cliente:***~/app-crud* **$** `nano Chart.yaml`
+***debian@cliente:**~/app-crud* **$** `nano Chart.yaml`
 
 ```yaml
 apiVersion: v1
@@ -475,7 +475,7 @@ Ya tenemos las dependencias definidas, ahora hay que sincronizar las dependencia
 >
 >###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_dependency_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 
-***debian@cliente:***~/app-crud* **$** `helm dep update`
+***debian@cliente:**~/app-crud* **$** `helm dep update`
 
 ```shell
 Hang tight while we grab the latest from your chart repositories...
@@ -491,7 +491,7 @@ Deleting outdated charts
 
 Como muestra en la salida del comando anterior, un chart se ha guardado. Comprobamos que se ha guardado en el directorio `chart/`.
 
-***debian@cliente:***~/app-crud* **$** `ls -l charts/`
+***debian@cliente:**~/app-crud* **$** `ls -l charts/`
 
 ~~~
 -rw-r--r-- 1 debian debian 5742 Nov 30 09:27 mongodb-2.0.5.tgz
@@ -766,7 +766,7 @@ Al tener todo configurado, solo nos faltará instalar el chart pero antes examin
 > ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_lint/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 
 
-***debian@cliente:***~/app-crud* **$** `helm lint ./`
+***debian@cliente:**~/app-crud* **$** `helm lint ./`
 ```shell
 ==> Linting ./
 
@@ -806,9 +806,9 @@ Es posible que salgan algunos fallitos referidos a la `apiVersion`, ya que depen
 >     path: "/mnt/data"
 > ```
 
-Vamos a instalar el helm con el comando `helm install`.
+Ahora si, vamos a realizar la instalación del chart, con el mismo comando que vimos anteriormente `helm install`, este se encargar de desplegar los ficheros YAML de los objetos de Kubernetes inyectandole los valores que le hemos indicado en el fichero ``values.yaml``.
 
-***debian@cliente:***~/app-crud* **$** `helm install app-crud ./`
+***debian@cliente:**~/app-crud* **$** `helm install app-crud ./`
 
 ~~~
 NAME: app-crud
@@ -852,7 +852,7 @@ NOTES:
 
 Como podemos ver, se ha instalado con exito y lo podemos listar con `helm list`.
 
-***debian@cliente:***~/app-crud* **$** `helm list`
+***debian@cliente:**~/app-crud* **$** `helm list`
 
 ~~~
 NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                APP VERSION
@@ -861,7 +861,7 @@ app-crud        default         1               2020-11-30 12:50:21.429099337 +0
 
 Y podemos ver con el comando `kubectl get all` que se han creado los recursos que hemos ido editando en esta práctica:
 
-***debian@cliente:***~/app-crud* **$** `kubectl get all`
+***debian@cliente:**~/app-crud* **$** `kubectl get all`
 
 ~~~
 NAME                                         READY   STATUS    RESTARTS   AGE
@@ -910,34 +910,34 @@ Para acceder a nuestra aplicación utilizaremos el puerto externo del servicio d
 
 Vamos a crear un repositorio en Github
 
-***debian@cliente:***~/app-crud* **$** `helm repo index .`
+***debian@cliente:**~/app-crud* **$** `helm repo index .`
 
-***debian@cliente:***~/app-crud* **$** `ls`
+***debian@cliente:**~/app-crud* **$** `ls`
 ~~~
 charts  Chart.yaml  index.yaml  templates  values.yaml
 ~~~
 
-***debian@cliente:***~/app-crud* **$** `cat index.yaml `
+***debian@cliente:**~/app-crud* **$** `cat index.yaml `
 ~~~
 apiVersion: v1
 entries: {}
 generated: "2020-11-12T10:09:54.715010553Z"
 ~~~
 
-***debian@cliente:***~/app-crud* **$** `git init`
+***debian@cliente:**~/app-crud* **$** `git init`
 ~~~
 Initialized empty Git repository in /home/debian/app-python3/.git/
 ~~~
 
-***debian@cliente:***~/app-crud* **$** `echo "Aplicación en python con base de dato Postgres creada con Helm para Kubernetes." > README.md`
+***debian@cliente:**~/app-crud* **$** `echo "Aplicación en python con base de dato Postgres creada con Helm para Kubernetes." > README.md`
 
-***debian@cliente:***~/app-crud* **$** `git branch -M master`
+***debian@cliente:**~/app-crud* **$** `git branch -M master`
 
-***debian@cliente:***~/app-crud* **$** `git remote add origin https://github.com/MoralG/app-python3.git`
+***debian@cliente:**~/app-crud* **$** `git remote add origin https://github.com/MoralG/app-python3.git`
 
-***debian@cliente:***~/app-crud* **$** `git add *`
+***debian@cliente:**~/app-crud* **$** `git add *`
 
-***debian@cliente:***~/app-crud* **$** `git commit -m "Generar repositorio para Helm"`
+***debian@cliente:**~/app-crud* **$** `git commit -m "Generar repositorio para Helm"`
 ~~~
 [master 3cfa144] Generar repositorio para Helm
  Committer: Debian <debian@cliente.novalocal>
@@ -968,7 +968,7 @@ After doing this, you may fix the identity used for this commit with:
  create mode 100644 README.md
 ~~~
 
-***debian@cliente:***~/app-crud* **$** `git push -u origin master`
+***debian@cliente:**~/app-crud* **$** `git push -u origin master`
 ~~~
 Username for 'https://github.com': moralg
 Password for 'https://moralg@github.com': 
@@ -983,12 +983,12 @@ To https://github.com/MoralG/app-python3.git
 Branch 'master' set up to track remote branch 'master' from 'origin'.
 ~~~
 
-***debian@cliente:***~/app-crud* **$** `helm repo add my-repo https://raw.githubusercontent.com/moralg/app-python3/master`
+***debian@cliente:**~/app-crud* **$** `helm repo add my-repo https://raw.githubusercontent.com/moralg/app-python3/master`
 ~~~
 "my-repo" has been added to your repositories
 ~~~
 
-***debian@cliente:***~/app-crud* **$** `helm repo update`
+***debian@cliente:**~/app-crud* **$** `helm repo update`
 ~~~
 Hang tight while we grab the latest from your chart repositories...
 ...Successfully got an update from the "my-repo" chart repository
@@ -996,7 +996,7 @@ Hang tight while we grab the latest from your chart repositories...
 Update Complete. ⎈Happy Helming!⎈
 ~~~
 
-***debian@cliente:***~/app-crud* **$** `helm repo list`
+***debian@cliente:**~/app-crud* **$** `helm repo list`
 ~~~
 NAME   	URL                                                       
 stable 	https://kubernetes-charts.storage.googleapis.com/         
@@ -1006,7 +1006,7 @@ my-repo	https://raw.githubusercontent.com/moralg/app-python3/master
 
 
 
-***debian@cliente:***~/app-crud/charts/* **$** `helm package mongodb/ `
+***debian@cliente:**~/app-crud/charts/* **$** `helm package mongodb/ `
 
 ~~~~
 Successfully packaged chart and saved it to: /home/debian/prueba/express-crud/charts/mongodb-2.0.5.tgz
