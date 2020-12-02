@@ -50,7 +50,9 @@ Vamos a instala la herramienta de linea de comando `helm` en nuestro equipo loca
 
 Descargamos la última release de Helm de la versión 3. Para hacer esto nos vamos a la [página oficial](https://github.com/helm/helm/releases) y nos descargamos el fichero `.tar.gz` para Linux
 
-> **NOTA**: Es recomendable que nos descarguemos una versión que este **Verificada**.
+> ### NOTA 
+> -----------------------
+> Es recomendable que nos descarguemos una versión que este **Verificada**.
 
 En el momento de la creación de este tutorial, nos descargamos la versión 3.2.0 de Helm.
 ~~~
@@ -74,9 +76,15 @@ helm version
     version.BuildInfo{Version:"v3.2.0", GitCommit:"e11b7ce3b12db2941e90399e874513fbd24bcb71",   GitTreeState:"clean", GoVersion:"go1.13.10"}
 ~~~
 
-> Para mayor seguridad es recomendable quitarle los permisos de lectura al los grupos del fichero de configuración del cluster
 
-sudo chmod 600 /home/debian/.kube/mycluster.conf
+> ### NOTA
+> --------------------
+> Para mayor seguridad es recomendable quitar los permisos de lectura a los grupos para el fichero de configuración del cluster.
+> Ejecutamos el siguiente comando:
+> ````shell
+> sudo chmod 600 /home/debian/.kube/mycluster.conf
+> ````
+
 
 Ya tenemos instalado Helm en la version 3, lo siguiente que vamos a ver es como iniciar el repositorio chart de Helm.
 
@@ -114,12 +122,11 @@ stable/ambassador                    	5.3.1        	0.86.1                 	A He
 
 Vamos a instalar un chart del repositorio oficial de Helm, para hacer esto tenemos que actualizar primero la información de los chart disponibles en el repositorio `stable` con el comando `helm repo update`.
 
--------------------------------------------
-#### Estructura:
-* **`helm repo update [flags]`**
-
-###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_repo_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
--------------------------------------------
+> ### ESTRUCTURA DEL COMANDO
+> --------------------
+>* **`helm repo update [flags]`**
+>
+>###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_repo_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 
 ~~~
 helm repo update
@@ -132,12 +139,11 @@ No ha salido un mensaje de que esta todo actualizado, ahora vamos a proceder a i
 
 Antes de empezar a instalar, tenenemos que saber el nombre del chart, para eso utilizamos el comando `helm search repo`.
 
--------------------------------------------
-#### Estructura:
-* **`helm search repo [keyword] [flags]`**
-
-###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_search_repo/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
--------------------------------------------
+> ### ESTRUCTURA DEL COMANDO
+> --------------------
+> * **`helm search repo [keyword] [flags]`**
+> 
+> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_search_repo/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 
 Vamos a buscar la **release stable** de mysql, pero si queremos otras versiones podemos utilizar la flags `--devel` para prerelease o `--version [version]` para que nos muestre la version concreta.
 
@@ -158,12 +164,11 @@ Nos ha listado todo lo que tiene que ver con el término **mysql** en su versió
 
 Para instalar un chart tenemos que utilizar el comando `helm install`.
 
--------------------------------------------
-##### Estructura:
-* **`helm install [NAME] [CHART] [flags]`**
-
-###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_install/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
--------------------------------------------
+> ### ESTRUCTURA DEL COMANDO
+> --------------------
+> * **`helm install [NAME] [CHART] [flags]`**
+> 
+> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_install/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 
 Vamos a asignarle el nombre de **maria** a nuestro chart, pero podemos utilizar la flags `--generate-name`para asignarle uno automáticamente.
 
@@ -210,7 +215,9 @@ To connect to your database directly from outside the K8s cluster:
     mysql -h ${MYSQL_HOST} -P${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD}
 ~~~
 
-> **NOTA**: Si queremos ver la opciones configurables de un chart, podemos usar `helm show values <nombre_chart>`
+> ### NOTA
+> --------------------
+> Si queremos ver la opciones configurables de un chart, podemos usar `helm show values <nombre_chart>`
 > ~~~
 > helm show values stable/mariadb
 > ## Global Docker image parameters
@@ -297,12 +304,13 @@ helm history maria
 
 Para desinstalar una versión tenenemos que utilizar el comando `helm uninstall`.
 
--------------------------------------------
-##### Estructura:
-* **`helm uninstall RELEASE_NAME [...] [flags]`**
 
-###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_plugin_uninstall/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
--------------------------------------------
+> ### ESTRUCTURA DEL COMANDO
+> --------------------
+> * **`helm uninstall RELEASE_NAME [...] [flags]`**
+> 
+> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_plugin_uninstall/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+
 
 Vamos a realizar la desinstalación del chart **maria** pero vamos a añadir el flag `--feep-history` para mantener el historial de versión.
 
@@ -332,12 +340,11 @@ Nos muestra que ha sido desinstalada.
 
 Vamos a realizar un rollback para revertir una release a una versión anterior con el comando `helm rollback`.
 
--------------------------------------------
-##### Estructura:
-* **`helm rollback <RELEASE> [REVISION] [flags]`**
-
-###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_rollback/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
--------------------------------------------
+> ### ESTRUCTURA DEL COMANDO
+> --------------------
+> * **`helm rollback <RELEASE> [REVISION] [flags]`**
+> 
+> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_rollback/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 
 Si hemos borrado una versión de un chart y por consiguiente, no nos sale con el comando `helm ls` vamos a tener que utilizar `helm history`.
 
