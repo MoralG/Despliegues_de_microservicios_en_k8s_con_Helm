@@ -386,21 +386,21 @@ helm history maria
 
 En esta guía vamos a desarrollar nuestros propios Charts en Helm. Es recomentable que se mire antes la [Instalación y configuración](https://github.com/MoralG/Despliegues_de_microservicios_en_k8s_con_Helm_y_OpenShift/blob/master/Proyecto.md#instalaci%C3%B3n-de-helm) de Helm y la [Guía rápida](https://github.com/MoralG/Despliegues_de_microservicios_en_k8s_con_Helm_y_OpenShift/blob/master/Proyecto.md#gu%C3%ADa-r%C3%A1pida).
 
-Si quiere saber el funcionamiento de algunos comando de Helm puede ir a la [Guía de comando]() de Helm.
+Si quiere saber el funcionamiento de algunos comando de Helm puede ir a la [Guía de comandos](https://helm.sh/docs/helm/) de Helm.
 
 Un Chart es una colección de ficheros que describen un cojunto de recursos de Kubernetes. Podemos usar un solo chart para implementar un pod memcached, o si nos vamos a algo mas complicado, una pila completa de aplicaciones web con servidores HTTP, bases de datos, cache, etc.
 
-Es bueno tener unas prácticas recomendadas para realizar crear un chart de Helm, por eso vamos a ir paso a paso creando el chart de helm para una aplicación CRUD (Create, Read, Update, Delete) en Java y luego veremos como podemos sacarla partido a los chart oficiales o los creados por la comunidad, desplegando un chart oficial `stable/lamp` pero añadiendo nuestro propios valores y secrets.
+Es bueno tener unas prácticas recomendadas para crear un chart con Helm, por eso vamos a ir paso a paso creando el chart para una aplicación CRUD (Create, Read, Update, Delete) en Java y luego veremos como podemos sacarle partido a los chart oficiales o a los creados por la comunidad, desplegando un chart oficial `stable/lamp` pero añadiendo nuestros propios valores y secrets.
 
 ### Despliegue de Chart CRUD utilizando express.js y mongodb
 
-Vamos a desplegar, con ayuda de Helm, un aplicación CRUD (Una aplicación simple donde se va a poder crear, leer, actualizar y eliminar datos) con la ayuda de Express.js (Es de los framework de aplicaciones para Node.js). También necesitaremos una base de datos, en nuestro caso vamos a utilizar Mongodb, y la introduciremos como dependencia.
+Vamos a desplegar, con ayuda de Helm, un aplicación CRUD (Una aplicación simple donde se va a poder crear, leer, actualizar y eliminar datos) con la ayuda de Express.js (Es uno de los framework de aplicaciones para Node.js). También necesitaremos una base de datos, en nuestro caso vamos a utilizar Mongodb, y la introduciremos como dependencia.
 
 Crearemos todos los objetos necesarios para el despliegue en Kubernetes con ficheros YAML, pero modificandolos para que sean funcionales para utilizarlos con Helm. Además, explicaremos para que se utilizan las dependencias en los chart de Helm.
 
 > #### NOTA
 > ----------------------
-> Helm trabaja con un lenguaje de plantillas, para los objetos de Kubernetes, de Go (Lenguaje de programación desarrollado por Google).
+> Helm trabaja con un lenguaje de plantillas Go (Lenguaje de programación desarrollado por Google) añadidos a los fichero YAML de los objetos de Kubernetes.
 > 
 > Ejemplo:
 > ````yaml
@@ -460,13 +460,13 @@ Vamos a repasar los ficheros y directorios necesarios para realizar un buen desp
 
 |Objeto          | Descripción
 |----------------|-------------------------------
-|**charts/**| Directorio donde de añadiran los chart que necesitemos como dependencias.
+|**charts/**| Directorio donde se añadiran los chart que necesitemos como dependencias.
 |**Chart.yaml**| Fichero yaml que contiene la información del chart.
 |**README.md**| Fichero utilizado para la descripción del chart.
 |**values.yaml**| Fichero que contiene los distintos valores por defectos que le pasamos al chart.
 |**templates/**| Directorio donde añadiremos los recursos de Kubernetes. Añadiremos los diferentes objetos mediante ficheros yaml.
 |**templates/NOTES.txt**| Fichero opcional, que contiene breves notas de uso, estas se muestran al terminar el comando `helm install`.
-|**templates/_helpers.tpl**| Fichero opcional, utilizado para añadir valores que pueden ser reutilizables en todo el chart.
+|**templates/_helpers.tpl**| Fichero opcional, utilizado para definir algunos valores que pueden ser reutilizables en la creación del chart.
 
 A partir de aquí tenemos que preguntarnos que vamos a necesitar.
 
@@ -478,14 +478,17 @@ A partir de aquí tenemos que preguntarnos que vamos a necesitar.
 
 Para empezar vamos a modificar los metadatos del fichero `Chart.yaml`.
 
-***debian@cliente:**~/app-crud* **$** `nano Chart.yaml`
-
 ```yaml
+# Versión de la APi del chart, ira subiendo cada vez que hagamos un nuevo despliegue del chart.
 apiVersion: v1
+# Versión de la aplicación que vamos a desplegar.
 appVersion: "1.0.0"
 description: Aplicacion CRUD en Helm chart con express.js y mongodb.
+# Nombre que le asignaremos al chart.
 name: app-crud
+# Versión del empaquetado del chart.
 version: 0.1.0
+# Alojamiento del chart.
 sources:
 - https://github.com/MoralG/appCRUD
 maintainers:
@@ -498,9 +501,13 @@ Ahora vamos a definir la dependencia, dado que nuestra aplicación necesita la b
 
 ```yaml
 dependencies:
+# Nombre del chart.
 - name: mongodb
+# Versión del empaquetado del chart, en este caso la últma estable "latest". 
  version: latest
+# Alojamiento donde la descargaremos.
  repository: https://kubernetes-charts.storage.googleapis.com/
+# Opcional. Esto hará que el fichero "values.yaml" del chart principal se pueda añadir valores, mientras este el atributo "mongodb.enabled" en "true".
  condition: mongodb.enabled
 ```
 
@@ -551,24 +558,31 @@ labels:
 > #### NOTA
 > ----------------------
 > La función **template** hace referencia al código definido en el fichero `_helpers.tlp`. Te lo muestro a continuación:
-> 
-> Definir el nombre del chart extraido del fichero ``Chart.yaml`` y podemos unirle una cadena extra si añadimos el argumento `nameOverride` al fichero ``values.yaml``.
+>
 > ~~~~
 > {{- define "express-crud.name" -}}
 > {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 > {{- end -}}
 > ~~~~
-> 
-> Definir el label con el nombre y la version del chart.
+> Esto define el atributo `express-crud.name` con el nombre del chart extraido del fichero `Chart.yaml` y podemos unirle una cadena extra si añadimos el argumento `nameOverride` al fichero ``values.yaml``.
+>
 > ~~~~
 > {{- define "express-crud.chart" -}}
 > {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 > {{- end -}}
 > ~~~~
+> Esto define el atributo `express-crud.chart` con el nombre unido a la version del chart extraido del fichero `Chart.yaml`.
+>
 > 
-> Explicado esto, saber que `.Chart` hace referencia al fichero ``Chart.yaml``, `.Values` hace referencia al fichero ``values.yaml`` y `.Release` hace referencia al nombre del objeto asignado en el despliegue.
- 
-Añadimos variables de entornos configurar los valores del chart de mongodb.
+> Explicado esto, saber que: 
+> 
+> * `.Chart` hace referencia al fichero `Chart.yaml`.
+> 
+> * `.Values` hace referencia al fichero `values.yaml`.
+> 
+> * `.Release` hace referencia al nombre del objeto asignado en el despliegue.
+
+Añadimos variables de entornos para configurar los valores del chart de mongodb.
 
 ```yaml
 env:
@@ -587,7 +601,7 @@ env:
       key: mongodb-password
 ```
 
- *Valores del fichero `values.yaml` referentes a la parte de `Values.mongodb`:
+* Valores del fichero `values.yaml` referentes a la parte de `Values.mongodb`:
 ```yaml
 mongodb:
   mongodbRootPassword:
@@ -596,7 +610,7 @@ mongodb:
   mongodbDatabase: test
 ```
 
-Cambiamos el parámetro `image` para actualizar el chart de Helm con una nueva versión de la aplicación simplemente cambiando el valor en `Chart.yaml`.
+Modificamos el parámetro `image` para actualizar el chart de Helm con una nueva versión de la aplicación simplemente cambiando el valor en `Chart.yaml`.
 
 ```yaml
 image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
@@ -606,7 +620,7 @@ image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.imag
 > ----------------------
 > La función **default** se utiliza para asignar un valor por defecto en el caso que no se especifique el atributo en el fichero ``values.yaml``.
 > 
-> Lo que quiere decir este parte del código ``{{ default .Chart.AppVersion .Values.image.tag }}`` es que si no especifica una un atributo `image.tag` en el fichero `values.yaml`, se extraerá del atributo `AppVersion` del fichero `Chart.yaml`.
+> Lo que quiere decir este parte del código ``{{ default .Chart.AppVersion .Values.image.tag }}`` es que si no se especifica un atributo `image.tag` en el fichero `values.yaml`, se extraerá del atributo `AppVersion` del fichero `Chart.yaml`.
 
 * Valores del fichero `values.yaml` referentes a la parte de `Values.image`:
 ```yaml
@@ -616,7 +630,7 @@ image:
   pullPolicy: IfNotPresent
 ```
 
-Añadimos las siguientes lineas para poder modificar los valores referente al puerto internos, protocolo, etc, desde el fichero `values.yaml`.
+Añadimos las siguientes lineas para poder modificar los valores referente al puerto interno, protocolo, etc, desde el fichero `values.yaml`.
 
 ```yaml
 ports:
@@ -697,9 +711,9 @@ Un servicio permite que la aplicación reciba trafico a través de una direcció
 |**NodePort**| Se puede acceder al servicio desde fuera del clúster a través de NodeIP y NodePort
 |**LoadBalancer**| Se puede acceder al servicio desde fuera del clúster a través de un equilibrador de carga externo. Puede ingresar a la aplicación.
 
-En nuestro caso vamos a utilizar LoadBalancer para la aplicación CRUD, ya que necesitamos acceder desde el exterior y el servicio de mongodb será ClusterIP, porque este solo tiene que poder tener acceso la aplicación CRUD dentro del cluster.
+En nuestro caso vamos a utilizar LoadBalancer para la aplicación CRUD, ya que necesitamos acceder desde el exterior y el servicio de mongodb será ClusterIP, porque este solo tiene que poder tener acceso a la aplicación CRUD dentro del cluster.
 
-Modificamos el fichero `service.yaml` para indicarle los valores de tipo de servicios, puerto externo, etc.
+Modificamos el fichero `service.yaml` para indicarle los valores de tipo de servicio, puerto externo, etc.
 
 ```yaml
 spec:
@@ -755,6 +769,7 @@ replicaCount: 1
 
 image:
   repository: jainishshah17/express-mongo-crud
+# Puede descomentar el atributo "tag" y tendrá un peso mayor que el valor por defecto.
   # tag: 1.0.1
   pullPolicy: IfNotPresent
 
