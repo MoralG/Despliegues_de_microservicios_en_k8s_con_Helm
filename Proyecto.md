@@ -618,7 +618,7 @@ initContainers:
 initContainerImage: "alpine:3.6"
 ```
 
-> ### NOTA
+> #### NOTA
 > ------------------------
 > Lo que realiza el código añadido en el `initContainers` es un bucle, de manera básica, mientras la condición sea falsa, "`until`", del contenedor ``{{ .Release.Name }}-mongodb``, tenga que esperar para iniciarse, por eso el comando `sleep`.
 
@@ -776,14 +776,18 @@ Al tener todo configurado, solo nos faltará instalar el chart pero antes examin
 Cuando nos muestre el mensaje con 0 fallos, podemos realizar la instalación.
 
 Es posible que salgan algunos fallitos referidos a la `apiVersion`, ya que dependiendo de que versión de helm utilices y dependiendo de la dependencia que elijas puede variar.
-> Ejemplo de un error que me salió a mi:
->
+
+> #### NOTA
+> --------------------------
+> Ejemplo de error:
 > ~~~
 > Chart.yaml: dependencies are not valid in the Chart file with apiVersion 'v1'. They are valid in apiVersion 'v2'`
 > ~~~
 >
 > Para arreglar este error tan solo deberiamos de cambiar en el fichero `Chart.yaml` la version del campo `apiVersion` a `v2`.
 
+> #### NOTA
+> --------------------------
 > Recordad añadir un Persistent Volume, para que el Persistent Volume Claim se enlace. Dejo un fichero de configuración de un PV.
 > ```yaml
 > apiVersion: v1
