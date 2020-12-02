@@ -74,6 +74,10 @@ helm version
     version.BuildInfo{Version:"v3.2.0", GitCommit:"e11b7ce3b12db2941e90399e874513fbd24bcb71",   GitTreeState:"clean", GoVersion:"go1.13.10"}
 ~~~
 
+> Para mayor seguridad es recomendable quitarle los permisos de lectura al los grupos del fichero de configuración del cluster
+
+sudo chmod 600 /home/debian/.kube/mycluster.conf
+
 Ya tenemos instalado Helm en la version 3, lo siguiente que vamos a ver es como iniciar el repositorio chart de Helm.
 
 ### Agregando un Helm Chart Repository
@@ -773,6 +777,24 @@ Es posible que salgan algunos fallitos referidos a la `apiVersion`, ya que depen
 >
 > Para arreglar este error tan solo deberiamos de cambiar en el fichero `Chart.yaml` la version del campo `apiVersion` a `v2`.
 
+> Recordad añadir un Persistent Volume, para que el Persistent Volume Claim se enlace. Dejo un fichero de configuración de un PV.
+> ```yaml
+> apiVersion: v1
+> kind: PersistentVolume
+> metadata:
+>   name: task-pv-volume
+>   labels:
+>     type: local
+> spec:
+>   storageClassName: manual
+>   capacity:
+>     storage: 10Gi
+>   accessModes:
+>     - ReadWriteOnce
+>   hostPath:
+>     path: "/mnt/data"
+> ```
+
 Vamos a instalar el helm con el comando `helm install`.
 
 > **debian@cliente:***~/app-crud* **$** `helm install app-crud ./`
@@ -946,3 +968,12 @@ NAME   	URL
 stable 	https://kubernetes-charts.storage.googleapis.com/         
 my-repo	https://raw.githubusercontent.com/moralg/app-python3/master
 ~~~
+
+
+
+
+**debian@cliente:***~/app-crud/charts/* **$** `helm package mongodb/ `
+
+~~~~
+Successfully packaged chart and saved it to: /home/debian/prueba/express-crud/charts/mongodb-2.0.5.tgz
+~~~~
