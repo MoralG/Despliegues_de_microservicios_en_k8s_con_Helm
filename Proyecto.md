@@ -390,13 +390,50 @@ Si quiere saber el funcionamiento de algunos comando de Helm puede ir a la [Guí
 
 Un Chart es una colección de ficheros que describen un cojunto de recursos de Kubernetes. Podemos usar un solo chart para implementar un pod memcached, o si nos vamos a algo mas complicado, una pila completa de aplicaciones web con servidores HTTP, bases de datos, cache, etc.
 
-Es bueno tener unas prácticas recomendadas para realizar crear un chart de Helm, por eso vamos a ir paso a paso creando una aplicación en php y dando recomendaciones.
+Es bueno tener unas prácticas recomendadas para realizar crear un chart de Helm, por eso vamos a ir paso a paso creando el chart de helm para una aplicación CRUD (Create, Read, Update, Delete) en Java y luego veremos como podemos sacarla partido a los chart oficiales o los creados por la comunidad, desplegando un chart oficial `stable/lamp` pero añadiendo nuestro propios valores y secrets.
+
+### Despliegue de Chart CRUD utilizando express.js y mongodb
+
+Vamos a desplegar, con ayuda de Helm, un aplicación CRUD (Una aplicación simple donde se va a poder crear, leer, actualizar y eliminar datos) con la ayuda de Express.js (Es de los framework de aplicaciones para Node.js). También necesitaremos una base de datos, en nuestro caso vamos a utilizar Mongodb, y la introduciremos como dependencia.
+
+Crearemos todos los objetos necesarios para el despliegue en Kubernetes con ficheros YAML, pero modificandolos para que sean funcionales para utilizarlos con Helm. Además, explicaremos para que se utilizan las dependencias en los chart de Helm.
+
+> #### NOTA
+> ----------------------
+> Helm trabaja con un lenguaje de plantillas, para los objetos de Kubernetes, de Go (Lenguaje de programación desarrollado por Google).
+> 
+> Ejemplo:
+> ````yaml
+> apiVersion: v1
+> kind: ConfigMap
+> metadata:
+>   name: {{ .Release.Name }}-configmap
+> data:
+>   myvalue: "Hola Mundo"
+>   drink: {{ quote .Values.favorite.drink }}
+>   food: {{ quote .Values.favorite.food }}
+> ````
+> Como podemos ver, se mete dentro de cuatros corchetes ``{{ }}`` y la estructura es muy fácil.
+> ~~~~
+> functionName arg1 arg2 ...
+> ~~~~
+> Hay varias tipos de funciones que podemos utilizar. Si quereís saber mas sobre los tipos de funciones que podemos utilizar [LEER AQUÍ](https://helm.sh/docs/chart_template_guide/function_list/)
+> 
+> Lo que hay que tener claro son los argumentos, ya que al utilizar `.Values`, el valor predeterminado que va a adquirir es el que le indicamos en el fichero `values.yaml`.
+> 
+> Ejemplo de fichero values.yaml:
+> ~~~~
+> favorite:
+>   drink: coffee
+>   food: pizza
+> ~~~~
+> Iremos explicando las funciones y argumentos que salgan en la configuración de nuestro despliegue.
 
 Vamos a empezar creando el chart:
 
-***debian@cliente:**~* **$** ``helm create app-python3``
+***debian@cliente:**~* **$** ``helm create app-crud``
 ~~~
-Creating app-python3
+Creating app-crud
 ~~~
 
 Al crear un Chart, dispondremos de unos directorios en forma de árbol, los cuales podemos modificar y una vez terminado la modificación, empaquetarlo en archivos versionados para su implementación.
@@ -437,7 +474,7 @@ A partir de aquí tenemos que preguntarnos que vamos a necesitar.
 * ¿Que dependencias necesitamos definir?
 * ¿Para nuestra aplicación necesitamos volumenes persistentes?
 
-### Fichero Chart.yaml
+#### Fichero Chart.yaml
 
 Para empezar vamos a modificar los metadatos del fichero `Chart.yaml`.
 
@@ -457,7 +494,7 @@ maintainers:
 icon: https://res.cloudinary.com/practicaldev/image/fetch/s--5IllY723--/c_imagga_scale,f_auto,fl_progressive,h_900,q_auto,w_1600/https://thepracticaldev.s3.amazonaws.com/i/a3exuz06e9h212pandfr.png
 ```
 
-Ahora vamos a definir las dependencias, dado que nuestra aplicación necesita la base de datos mongodb, debemos especificarla en el fichero `Chart.yaml` con el campo `dependencies`.
+Ahora vamos a definir la dependencia, dado que nuestra aplicación necesita la base de datos mongodb, debemos especificarla en el fichero `Chart.yaml` con el campo `dependencies`.
 
 ```yaml
 dependencies:
@@ -471,9 +508,9 @@ Ya tenemos las dependencias definidas, ahora hay que sincronizar las dependencia
 
 > #### ESTRUCTURA DEL COMANDO
 > --------------------
->* **`helm dep update CHART [flags]`**
+> * **`helm dep update CHART [flags]`**
 >
->###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_dependency_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_dependency_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
 
 ***debian@cliente:**~/app-crud* **$** `helm dep update`
 
@@ -497,7 +534,7 @@ Como muestra en la salida del comando anterior, un chart se ha guardado. Comprob
 -rw-r--r-- 1 debian debian 5742 Nov 30 09:27 mongodb-2.0.5.tgz
 ~~~
 
-### Fichero deployment.yaml
+#### Fichero deployment.yaml
 
 Lo siguiente que tenemos que hacer es modificar un poco el fichero `deployment.yaml`, que es el recurso que se va a encargar de definir el control de réplicas, escabilidad de pods, etc...
 
@@ -511,6 +548,26 @@ labels:
   heritage: {{ .Release.Service }}
 ```
 
+> #### NOTA
+> ----------------------
+> La función **template** hace referencia al código definido en el fichero `_helpers.tlp`. Te lo muestro a continuación:
+> 
+> Definir el nombre del chart extraido del fichero ``Chart.yaml`` y podemos unirle una cadena extra si añadimos el argumento `nameOverride` al fichero ``values.yaml``.
+> ~~~~
+> {{- define "express-crud.name" -}}
+> {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+> {{- end -}}
+> ~~~~
+> 
+> Definir el label con el nombre y la version del chart.
+> ~~~~
+> {{- define "express-crud.chart" -}}
+> {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+> {{- end -}}
+> ~~~~
+> 
+> Explicado esto, saber que `.Chart` hace referencia al fichero ``Chart.yaml``, `.Values` hace referencia al fichero ``values.yaml`` y `.Release` hace referencia al nombre del objeto asignado en el despliegue.
+ 
 Añadimos variables de entornos configurar los valores del chart de mongodb.
 
 ```yaml
@@ -544,6 +601,12 @@ Cambiamos el parámetro `image` para actualizar el chart de Helm con una nueva v
 ```yaml
 image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
 ```
+
+> #### NOTA
+> ----------------------
+> La función **default** se utiliza para asignar un valor por defecto en el caso que no se especifique el atributo en el fichero ``values.yaml``.
+> 
+> Lo que quiere decir este parte del código ``{{ default .Chart.AppVersion .Values.image.tag }}`` es que si no especifica una un atributo `image.tag` en el fichero `values.yaml`, se extraerá del atributo `AppVersion` del fichero `Chart.yaml`.
 
 * Valores del fichero `values.yaml` referentes a la parte de `Values.image`:
 ```yaml
@@ -622,7 +685,7 @@ initContainerImage: "alpine:3.6"
 > ------------------------
 > Lo que realiza el código añadido en el `initContainers` es un bucle, de manera básica, mientras la condición sea falsa, "`until`", del contenedor ``{{ .Release.Name }}-mongodb``, tenga que esperar para iniciarse, por eso el comando `sleep`.
 
-### Fichero service.yaml
+#### Fichero service.yaml
 
 Ya tenemos nuestro fichero de despliegue listo, ahora vamos a modificar el fichero `service.yaml` para exponer nuestra aplicación al exterior.
 Un servicio permite que la aplicación reciba trafico a través de una dirección IP. Los servicios se pueden exponer de diferentes formas especificando un tipo:
@@ -669,7 +732,7 @@ labels:
   heritage: {{ .Release.Service }}
 ```
 
-### Fichero values.yaml
+#### Fichero values.yaml
 
 Definir la mayoría de nuestras configuraciones en el fichero `values.yaml` es una práctica para ayudar a mantener los chart Helm en un buen estado de mantenimiento, además de ser mas fácil cambiar a otra configuración.
 
@@ -806,7 +869,7 @@ Es posible que salgan algunos fallitos referidos a la `apiVersion`, ya que depen
 >     path: "/mnt/data"
 > ```
 
-Ahora si, vamos a realizar la instalación del chart, con el mismo comando que vimos anteriormente `helm install`, este se encargar de desplegar los ficheros YAML de los objetos de Kubernetes inyectandole los valores que le hemos indicado en el fichero ``values.yaml``.
+Ahora si, vamos a realizar la instalación del chart, con el mismo comando que vimos anteriormente en la la guia rápida, `helm install`, este se encargara de desplegar los ficheros YAML de los objetos de Kubernetes inyectandole los valores que le hemos indicado en el fichero ``values.yaml``.
 
 ***debian@cliente:**~/app-crud* **$** `helm install app-crud ./`
 
@@ -892,15 +955,19 @@ Para acceder a nuestra aplicación utilizaremos el puerto externo del servicio d
 
 -----------------------
 
+### Despliegue de Chart de aplicación PHP utilizando Laravel y MySQL
+
+
+
+
+
+-----------------------
+
 ## ACTUALIZACION DEL CHART
 
 -----------------------
 
 ## ROLLBACK DEL CHART
-
------------------------
-
-## DESPLIEGUE DE PARTE PRACTICA 2
 
 -----------------------
 
