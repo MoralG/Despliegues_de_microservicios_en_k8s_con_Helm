@@ -1,0 +1,17 @@
+apiVersion: v1
+appVersion: "1.0.0"
+description: Aplicacion CRUD en Helm chart con express.js y mongodb.
+name: app-crud
+version: 0.1.0
+sources:
+- https://github.com/MoralG/appCRUD
+maintainers:
+- name: moralg
+  email: ale95mogra@gmail.com
+icon: https://res.cloudinary.com/practicaldev/image/fetch/s--5IllY723--/c_imagga_scale,f_auto,fl_progressive,h_900,q_auto,w_1600/https://thepracticaldev.s3.amazonaws.com/i/a3exuz06e9h212pandfr.png
+
+dependencies:
+- name: mongodb
+  version: latest
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  condition: mongodb.enabled
