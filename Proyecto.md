@@ -969,23 +969,313 @@ Para acceder a nuestra aplicación utilizaremos el puerto externo del servicio d
 
 -----------------------
 
+Dos de los grandes beneficiones que obtenemos al utilizar Helm es poder modificar nuestro chart y actualizarlo de forma muy sencilla con el comando `helm upgrade` y la otra utilidad que vamos a ver a continuación es volver a un estado de la aplicación anterior, es decir, realizar un rollback a la version del chart que queramos con el comando `helm rollback`.
+
+
+### Actualización de nuestro chart
+
+Supongamos que queremos modificar nuestra aplicación y aumentar las réplicas. Para esto vamos a editar el fichero `values.yaml` y cambiamos el valor `replicaCount`.
+
+###### Antes
+````yaml
+replicaCount: 1
+````
+###### Después
+````yaml
+replicaCount: 2
+````
+Y ejecutamos el comando `helm update`, esto hará que actualice a una versión nueva del chart.
+
+Podemos ver que la versión del chart es 1.
+
+***debian@cliente:**~/app-crud* **$** `helm list`
+~~~~
+NAME      NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+app-crud  default         1               2020-12-04 13:54:08.201085786 +0000 UTC deployed        app-crud-0.1.0  1.0.1
+~~~~
+
+Y si actualizamos:
+
+***debian@cliente:**~/app-crud* **$** `helm upgrade app-crud ./`
+~~~~
+Release "app-crud" has been upgraded. Happy Helming!
+
+NAME: app-crud
+LAST DEPLOYED: Fri Dec  4 13:57:45 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+NOTES:
+1. Get the application URL by running these commands:
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get svc -w app-crud-app-crud'
+  export SERVICE_IP=$(kubectl get svc --namespace default app-crud-app-crud -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+  echo http://$SERVICE_IP:80
+~~~~
+
+Nos muestra un mensaje que el chart se ha actualizado, como podemos comprobarlo listando los chart.
+
+***debian@cliente:**~/app-crud* **$** `helm list`
+~~~~
+NAME      NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+app-crud  default         2               2020-12-04 13:57:45.495586135 +0000 UTC deployed        app-crud-0.1.0  1.0.1
+~~~~
+
+Podemos comprobar también que se ha realizado el cambio con el comando `helm get values`.
+
+***debian@cliente:**~/app-crud* **$** `helm get values --all app-crud | egrep replica`
+````yaml
+replicaCount: 2
+````
+
+Además si listamos los objetos pod que hay en el cluster de kubernetes, vermos que se esta creando un nuevo pod.
+
+***debian@cliente:**~/app-crud* **$** `kubectl get pod`
+~~~~
+NAME                                     READY   STATUS            RESTARTS   AGE
+app-crud-express-crud-565b97d46d-knwkh   1/1     Running           0          3m50s
+app-crud-express-crud-757b4f78fb-tn5d4   0/1     PodInitializing   0          13s
+app-crud-mongodb-5bc9679bcc-vk6qh        1/1     Running           0          3m50s
+~~~~
+
+
+### Realizar un Rollback a una version anterior del chart
+
+Ya hemos actualizado nuestro chart y tenemos dos pod corriendo gracias a que hemos aumentado 2 el valor de la replica pero imaginaros que la aplicación entra en estado de error y queremos volver a la version anterior del chart.
+
+Ejecutamos el comando `helm upgrade`, este comando revierte una versión (en nuestro caso la versión 2) a una versión anterior (queremos volver a la versión 1). El primer argumento del comando de rollback es el nombre de una versión y el segundo es un número de revisión (versión). Si se omite este argumento, se revertirá a la versión anterior.
+
+Para ver los números de revisión, ejecutamos el comando `helm history`
+
+***debian@cliente:**~/app-crud* **$** `helm history app-crud`
+~~~~
+REVISION        UPDATED                         STATUS          CHART           APP VERSION     DESCRIPTION
+1               Fri Dec  4 13:54:08 2020        superseded      app-crud-0.1.0  1.0.1           Install complete
+2               Fri Dec  4 13:57:45 2020        deployed        app-crud-0.1.0  1.0.1           Upgrade complete
+~~~~
+
+Queremos volver a la revisión 1:
+
+***debian@cliente:**~/app-crud* **$** `helm rollback prueba 1`
+~~~~
+Rollback was a success! Happy Helming!
+~~~~
+
+Y si listamos las revisiones de nuevo:
+
+***debian@cliente:**~/app-crud* **$** `helm history app-crud`
+~~~~
+REVISION        UPDATED                         STATUS          CHART           APP VERSION     DESCRIPTION
+1               Fri Dec  4 13:54:08 2020        superseded      app-crud-0.1.0  1.0.1           Install complete
+2               Fri Dec  4 13:57:45 2020        superseded      app-crud-0.1.0  1.0.1           Upgrade complete
+3               Fri Dec  4 14:06:43 2020        deployed        app-crud-0.1.0  1.0.1           Rollback to 1
+~~~~
+
+Mostramos el valor del atributo replica:
+
+***debian@cliente:**~/app-crud* **$** `helm get values --all app-crud | egrep replica`
+````yaml
+replicaCount: 1
+````
+
+Y por útltimo, podemos ver que esta pod nuevo esta en estado `Terminating`
+
+***debian@cliente:**~/app-crud* **$** `kubectl get pod`
+~~~~
+NAME                                     READY   STATUS            RESTARTS   AGE
+app-crud-express-crud-565b97d46d-knwkh   1/1     Running           0          12m
+app-crud-express-crud-757b4f78fb-tn5d4   0/1     Terminating       0          16s
+app-crud-mongodb-5bc9679bcc-vk6qh        1/1     Running           0          12m
+~~~~
+
+-----------------------
+
 ### Despliegue de Chart de aplicación PHP utilizando Laravel y MySQL
 
+Vamos a desplegar una nueva aplicación PHP de Laravel 7 (es un frameworks de aplicaciones PHP de código abierto mas populares). Este lo vamos a implementar con una vase de datos MySQL con ayuda del chart oficial `stable/lamp`.
 
+Para el despliegue de esta aplicación vamos a utilizar una imagen docker `moralg/larabel-kubernetes`, la cual he creado con docker compose y subido a mi repositorio de [Docker Hub](https://hub.docker.com/repository/docker/moralg/laravel-kubernetes) para utilizarla esta práctica.
 
+> #### NOTA
+> ----------------------
+> La aplicación de larabel la he cogido prestada del repositorio oficial de Larabel en [Github](https://github.com/laravel/laravel).
 
+Antes de realizar la instalación del chart, he añadido una pequeña modificación al fichero `larabel/resources/views/welcome.blade.php`
 
------------------------
+````html
+<div class="links">
+   <strong>Database Connected: </strong>
+    @php
+        try {
+            DB::connection()->getPDO();
+            echo DB::connection()->getDatabaseName();
+            } catch (\Exception $e) {
+            echo 'None';
+        }
+    @endphp
+</div>
+````
 
-## ACTUALIZACION DEL CHART
+Este pequeño fragmento de código lo que hace es probar la conexión de la base de datos y muestrará el nombre si realiza la conexión.
 
------------------------
+También te dejo aquí el código del docker compose para tenerlo presente a la hora de crear los fichero necesarios para el despliegue de nuestro chart.
 
-## ROLLBACK DEL CHART
+````yaml
+version: '3.5'
+services:
+  php:
+    image: moralg/laravel-kubernetes:latest
+    restart: always
+    ports:
+      - 8000:80
+    environment:
+      - APP_KEY=base64:8thPzqcZG1NC8ga7TYrXQqEBXozhK5RgMqPVltVr9Ig=
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_PORT=3306
+      - DB_HOST=mysql
+      - DB_DATABASE
+      - DB_USERNAME
+      - DB_PASSWORD
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USERNAME}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+````
 
------------------------
+Como podemos ver, en el fichero del docker compose, le indicamos las variables de entorno que vamos a añadir a nuestro fichero values.yaml (en este fichero los datos no confidenciales) y en el secrets.yaml (los datos confidenciales).
 
-## REPO PUBLICO
+> #### NOTA
+> ----------------------
+> Además hay que tener en cuenta que el chart ofcial que vamos a utilizar tiene una serie de valores que podemos modificar. 
+> 
+> Te dejo el repositorio de Github de para que puedas mirar los valores. [stable/lamp](https://github.com/helm/charts/tree/master/stable/lamp)
+
+Ya que tenemos todo claro podemos comenzar a crear nuestros dos ficheros, los unicos que nos hace falta para desplegar una aplicación con Helm.
+
+Creamos el fichero `values.yaml` y añadimos el siguiente código.
+
+````yaml
+php:
+  repository: "moralg/laravel-kubernetes"
+  tag: "latest"
+  fpmEnabled: false
+  envVars:
+    - name: APP_ENV
+      value: pro
+    - name: APP_DEBUG
+      value: false
+    - name: DB_PORT
+      value: 3306
+    - name: DB_HOST
+      value: localhost
+````
+En el fichero `values.yaml` hemos añadido los valores de ``repositorio`` y la `tag` para indicar la imagen de docker de la aplicación Larabel.
+Tabién hemos indicado las variables de entorno no confidenciales, modificadas a nuestro a nuestras necesidades.
+
+Creamos el fichero `secrets.yaml` y añadimos el siguiente código.
+
+````yaml
+mysql:
+  rootPassword: "bd_root_pass"
+  user: bd_user
+  password: "bd_pass"
+  database: bd_name
+
+php:
+  envVars:
+    - name: APP_KEY
+      value: "base64:8thPzqcZG1NC8ga7TYrXQqEBXozhK5RgMqPVltVr9Ig="
+    - name: DB_DATABASE
+      value: bd_name
+    - name: DB_USERNAME
+      value: bd_user
+    - name: DB_PASSWORD
+      value: "bd_pass"
+````
+
+En el fichero `secrets.yaml` hemos añadido las variables confidenciales de la base de datos, y con los mismos valores se la hemos asignado a las variables confidenciales de nuestra aplicación php, para que tenga acceso a MySQL. 
+
+Una vez que tengamos creado estos dos ficheros vamos a instalar el chart con el comando `helm install` y añadiendo el parámetro `-f` para indicar los ficheros, además de el chart oficial `stable/lamp`
+
+***debian@cliente:**~/app-larabel* **$** `helm install laravel-kubernetes -f values.yaml -f secrets.yaml stable/lamp`
+~~~~
+NAME: laravel
+LAST DEPLOYED: Fri Dec  4 12:11:24 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+INIT:
+      Please wait for all init containers to finish before connecting to
+      the charts services. This might take a few minutes depending on their
+      tasks.
+
+LOADBALANCER:
+      Please wait until the service has been routed to an IP address.
+      You can watch the status of by running 'kubectl get svc -w laravel-lamp'
+
+1. You can now connect to the following services:
+      export CHARTIP=$(kubectl get svc laravel-lamp --output=jsonpath={.status.loadBalancer.ingress..ip})
+
+      Main Site:
+        http://$CHARTIP
+~~~~
+
+> #### NOTA
+> ----------------------
+> Es necesario crear un Volume Persistent, dejo un fichero YAML del objeto para crearlo:
+> ````yaml
+> apiVersion: v1
+> kind: PersistentVolume
+> metadata:
+>   name: volume-mysql
+>   labels:
+>     type: local
+> spec:
+>   capacity:
+>     storage: 10Gi
+>   accessModes:
+>     - ReadWriteOnce
+>   hostPath:
+>     path: "/mnt"
+> ````
+> Y ejecutamos lo siguiente:
+> 
+> ***debian@cliente:**~* **$** `kubectl app install laravel-kubernetes -f values.yaml -f secrets.yaml stable/lamp`
+
+Podemos ver que todo esta funcionando como en la práctica anterior, listando todos los objetos:
+
+***debian@cliente:**~* **$** `kubectl get all`
+~~~~
+NAME                                READY   STATUS    RESTARTS   AGE
+pod/laravel-lamp-68dffb6495-9hlx6   2/2     Running   0          48m
+
+NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                       AGE
+service/kubernetes     ClusterIP      10.96.0.1       <none>        443/TCP                       40d
+service/laravel-lamp   LoadBalancer   10.103.15.225   <pending>     80:32418/TCP,3306:30419/TCP   48m
+
+NAME                           READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/laravel-lamp   1/1     1            1           48m
+
+NAME                                      DESIRED   CURRENT   READY   AGE
+replicaset.apps/laravel-lamp-68dffb6495   1         1         1       48m
+~~~~
+
+Y para acceder a nuestra aplicación desde http, tenemos que poner en el navegador la ip del servidor y el puerto externo asignado al httpd, en este caso el **32418**.
+
+![app-larabel](image/app-larabel.png)
+
+----------
+
+### Creación de un repositorio público
+
 
 ### Configurar un repositorio privado de Github
 
