@@ -1,4 +1,7 @@
 # Despliegues de microservicios en k8s con Helm
+
+## Introdución
+
 Helm es un administrador de paquetes para Kubernetes, que ayuda en el proceso de gestión de versiones a desplegar, su empaquetado, proceso de release (forward, rollback, upgrade), etc... de una manera más fácil y rápida.
 
 Estos paquetes se denominan chart, los cuales son una colección de ficheros que describen un conjunto de recursos del API de Kubernetes. Un ejemplo comparable para entenderlo sería el caso del `apt` o `yum` u otros administradores de paquetes de distribuciones de linux pero para Kubernetes.
@@ -435,7 +438,7 @@ Vamos a empezar creando el chart:
 Creating app-crud
 ~~~
 
-Al crear un Chart, dispondremos de unos directorios en forma de árbol, los cuales podemos modificar y una vez terminado la modificación, empaquetarlo en archivos versionados para su implementación.
+Al crear un Chart, dispondremos de unos directorios en forma de árbol, los cuales podemos modificar y una vez terminado la modificación, Instalarlos con la versión indicada.
 
 ~~~
 app-crud/
@@ -1276,41 +1279,87 @@ Y para acceder a nuestra aplicación desde http, tenemos que poner en el navegad
 
 ### Creación de un repositorio público
 
+Podemos alojar y compartir chart de Helm a través de un repositorio de Helm, que es efectivamente un sitio web estático con un fichero `index.yaml`, compuesto de metadatos y enlaces a los chart de Helm.
 
-### Configurar un repositorio privado de Github
+Esto hace que se pueda alojar un repositorio en Github Pages, S3 de AWS, Almacenamiento en la nube de Google, etc. En esta práctica vamos a utilizar Github Pages, ya que tenemos el repositorio (Github) y el sitio web (Github Pages) en el mismo lugar.
 
-Vamos a crear un repositorio en Github
+Empezamos creando un repositorio en Github, yo lo llamaré [Public_repository_helm](https://github.com/MoralG/Public_repository_helm/tree/repo-helm).
 
-***debian@cliente:**~/app-crud* **$** `helm repo index .`
+![Create_repository](image/Create_repository.png)
 
-***debian@cliente:**~/app-crud* **$** `ls`
-~~~
-charts  Chart.yaml  index.yaml  templates  values.yaml
-~~~
+Clonamos el repositorio en nuestro equipo:
 
-***debian@cliente:**~/app-crud* **$** `cat index.yaml `
-~~~
-apiVersion: v1
-entries: {}
-generated: "2020-11-12T10:09:54.715010553Z"
-~~~
+***debian@cliente:**~* **$** `git clone git@github.com:MoralG/Public_repository_helm.git`
+~~~~
+Cloning into 'Public_repository_helm'...
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Receiving objects: 100% (3/3), done.
+~~~~
 
-***debian@cliente:**~/app-crud* **$** `git init`
-~~~
-Initialized empty Git repository in /home/debian/app-python3/.git/
-~~~
+El sigueinte paso es añadir algunos charts de Helm, vamos a utilizar los chart que se crean por defecto al utilizar `helm create` para realizar la práctica mas rápido.
 
-***debian@cliente:**~/app-crud* **$** `echo "Aplicación en python con base de dato Postgres creada con Helm para Kubernetes." > README.md`
+***debian@cliente:**~/Public_repository_helm* **$** `mkdir charts`
 
-***debian@cliente:**~/app-crud* **$** `git branch -M master`
+***debian@cliente:**~/Public_repository_helm/charts* **$** `helm create chart1 && helm create chart2`
+~~~~
+Creating chart1
+Creating chart2
+~~~~
 
-***debian@cliente:**~/app-crud* **$** `git remote add origin https://github.com/MoralG/app-python3.git`
+***debian@cliente:**~/Public_repository_helm/charts* **$** `tree`
+~~~~
+.
+├── chart1
+│   ├── charts
+│   ├── Chart.yaml
+│   ├── templates
+│   │   ├── deployment.yaml
+│   │   ├── _helpers.tpl
+│   │   ├── hpa.yaml
+│   │   ├── ingress.yaml
+│   │   ├── NOTES.txt
+│   │   ├── serviceaccount.yaml
+│   │   ├── service.yaml
+│   │   └── tests
+│   │       └── test-connection.yaml
+│   └── values.yaml
+└── chart2
+    ├── charts
+    ├── Chart.yaml
+    ├── templates
+    │   ├── deployment.yaml
+    │   ├── _helpers.tpl
+    │   ├── hpa.yaml
+    │   ├── ingress.yaml
+    │   ├── NOTES.txt
+    │   ├── serviceaccount.yaml
+    │   ├── service.yaml
+    │   └── tests
+    │       └── test-connection.yaml
+    └── values.yaml
 
-***debian@cliente:**~/app-crud* **$** `git add *`
+8 directories, 20 files
+~~~~
 
-***debian@cliente:**~/app-crud* **$** `git commit -m "Generar repositorio para Helm"`
-~~~
-[master 3cfa144] Generar repositorio para Helm
+Ahora vamos a preparar Github Pages, tenemos que habilitarlas en el repositorio git y también vamos a crear una rama vacía, la llamaremos `repo-helm`.
+
+Creamos la rama vacia así:
+
+***debian@cliente:**~/Public_repository_helm* **$** `git checkout --orphan repo-helm`
+~~~~
+Switched to a new branch 'repo-helm'
+~~~~
+
+Añadimos a la rama `repo-helm` los charts: 
+
+***debian@cliente:**~/Public_repository_helm* **$** `git add *`
+
+***debian@cliente:**~/Public_repository_helm* **$** `git commit -m "Charts añadidios"`
+~~~~
+[repo-helm (root-commit) 5a8be27] Charts añadidios
  Committer: Debian <debian@cliente.novalocal>
 Your name and email address were configured automatically based
 on your username and hostname. Please check that they are accurate.
@@ -1324,61 +1373,258 @@ After doing this, you may fix the identity used for this commit with:
 
     git commit --amend --reset-author
 
- 12 files changed, 360 insertions(+)
- create mode 100644 Chart.yaml
- create mode 100644 index.yaml
- create mode 100644 templates/NOTES.txt
- create mode 100644 templates/_helpers.tpl
- create mode 100644 templates/deployment.yaml
- create mode 100644 templates/hpa.yaml
- create mode 100644 templates/ingress.yaml
- create mode 100644 templates/service.yaml
- create mode 100644 templates/serviceaccount.yaml
- create mode 100644 templates/tests/test-connection.yaml
- create mode 100644 values.yaml
+ 23 files changed, 762 insertions(+)
  create mode 100644 README.md
-~~~
+ create mode 100644 charts/chart1/.helmignore
+ create mode 100644 charts/chart1/Chart.yaml
+ create mode 100644 charts/chart1/templates/NOTES.txt
+ create mode 100644 charts/chart1/templates/_helpers.tpl
+ create mode 100644 charts/chart1/templates/deployment.yaml
+ create mode 100644 charts/chart1/templates/hpa.yaml
+ create mode 100644 charts/chart1/templates/ingress.yaml
+ create mode 100644 charts/chart1/templates/service.yaml
+ create mode 100644 charts/chart1/templates/serviceaccount.yaml
+ create mode 100644 charts/chart1/templates/tests/test-connection.yaml
+ create mode 100644 charts/chart1/values.yaml
+ create mode 100644 charts/chart2/.helmignore
+ create mode 100644 charts/chart2/Chart.yaml
+ create mode 100644 charts/chart2/templates/NOTES.txt
+ create mode 100644 charts/chart2/templates/_helpers.tpl
+ create mode 100644 charts/chart2/templates/deployment.yaml
+ create mode 100644 charts/chart2/templates/hpa.yaml
+ create mode 100644 charts/chart2/templates/ingress.yaml
+ create mode 100644 charts/chart2/templates/service.yaml
+ create mode 100644 charts/chart2/templates/serviceaccount.yaml
+ create mode 100644 charts/chart2/templates/tests/test-connection.yaml
+ create mode 100644 charts/chart2/values.yaml
+~~~~
 
-***debian@cliente:**~/app-crud* **$** `git push -u origin master`
-~~~
-Username for 'https://github.com': moralg
-Password for 'https://moralg@github.com': 
-Enumerating objects: 16, done.
-Counting objects: 100% (16/16), done.
+***debian@cliente:**~/Public_repository_helm* **$** `git push origin repo-helm`
+~~~~
+Enumerating objects: 31, done.
+Counting objects: 100% (31/31), done.
 Delta compression using up to 2 threads
-Compressing objects: 100% (14/14), done.
-Writing objects: 100% (15/15), 5.14 KiB | 2.57 MiB/s, done.
-Total 15 (delta 0), reused 0 (delta 0)
-To https://github.com/MoralG/app-python3.git
-   ed95ff7..3cfa144  master -> master
-Branch 'master' set up to track remote branch 'master' from 'origin'.
-~~~
+Compressing objects: 100% (29/29), done.
+Writing objects: 100% (31/31), 6.28 KiB | 3.14 MiB/s, done.
+Total 31 (delta 10), reused 1 (delta 0)
+remote: Resolving deltas: 100% (10/10), done.
+remote:
+remote: Create a pull request for 'repo-helm' on GitHub by visiting:
+remote:      https://github.com/MoralG/Public_repository_helm/pull/new/repo-helm
+remote:
+To github.com:MoralG/Public_repository_helm.git
+ * [new branch]      repo-helm -> repo-helm
+~~~~
 
-***debian@cliente:**~/app-crud* **$** `helm repo add my-repo https://raw.githubusercontent.com/moralg/app-python3/master`
-~~~
-"my-repo" has been added to your repositories
-~~~
+Ahora habilitamos Github Pages en los ajustes de nuestro repositorio. La dirección es `Settings > Options > GitHub Pages`.
 
-***debian@cliente:**~/app-crud* **$** `helm repo update`
-~~~
-Hang tight while we grab the latest from your chart repositories...
-...Successfully got an update from the "my-repo" chart repository
-...Successfully got an update from the "stable" chart repository
-Update Complete. ⎈Happy Helming!⎈
-~~~
+Le indicamos la rama `repo-helm`, el directorio raíz `/(root)` y le damos a guardar `Save`.
 
-***debian@cliente:**~/app-crud* **$** `helm repo list`
-~~~
-NAME   	URL                                                       
-stable 	https://kubernetes-charts.storage.googleapis.com/         
-my-repo	https://raw.githubusercontent.com/moralg/app-python3/master
-~~~
+![github-pages](image/github-pages.PNG)
 
+Esperamos unos segundos y podremos acceder a la URL que nos proporciona Github Pages.
 
+![github-pages-web](image/github-pages-web.PNG)
 
+Podemos utilizar un combinación de los comandos `helm package` y `helm repo` para construir nuestro repositorio de Helm a mano, o podemos utilizar `chart-releaser` que además de crear nuestros paquetes, nos los cargará como binarios, en una versión de Github, con la versión adecuada.
 
-***debian@cliente:**~/app-crud/charts/* **$** `helm package mongodb/ `
+Nos descargaremos la última versión de `chart-releaser` desde el repositorio de [Helm en Github](https://github.com/helm/chart-releaser/releases) y descomprimimos el fichero con `tar`.
+
+***debian@cliente:**/tmp* **$** `curl -sSL https://github.com/helm/chart-releaser/releases/download/v0.2.1/chart-releaser_0.2.1_linux_amd64.tar.gz | tar xzf -`
+
+Movemos el del binario a `/bin/cr`
+
+***debian@cliente:**/tmp* **$** `sudo mv cr /bin/cr`
+
+Comprobamos que esta instalado y la versión:
+
+***debian@cliente:**~* **$** `cr version`
+~~~~
+Version:         v0.2.1
+Git commit:      5132b262ef33b074bf47ce8ee446433849e93873
+Date:            2019-05-23T06:19:20Z
+License:         Apache 2.0
+~~~~
+
+Hay dos comandos que nos interesan, `cr index` (creará un fichero `index.yaml`) y `cr upload` (cargará los paquetes a las versiones de Github). Para esto último, necesitamos un token de Github para que pueda utilizar la API.
+
+La dirección para crear un token es: `Settins - Developer settings - Personal access tokens`. Seleccionamos `Generate new token` y le asignamos un nombre y marcamos los ámbitos: `repo`, `workflow`, `write:packages`, `delete:packages`.
+
+Creamos una variable de entorno con el token de acceso.
+
+***debian@cliente:**~* **$** ` export CR_TOKEN=b67e55c97bcaa440d75de4258a2e79b551101c5f`
+
+Nuestro siguiente paso es crear y cargar los paquetes, para esto vamos a utilizar el comndo `helm package`
+
+Tenemos que crear un directorio para los paquetes que vamos a cargar, además de añadirlo al fichero `.gitignore` para que no se suba a nuestro repositorio.
+
+***debian@cliente:**~/Public_repository_helm* **$** `echo ".deploy" >> .gitignore`
+
+***debian@cliente:**~/Public_repository_helm* **$** `helm package charts/{chart1,chart2} --destination .deploy`
+~~~~
+Successfully packaged chart and saved it to: .deploy/chart1-0.1.0.tgz
+Successfully packaged chart and saved it to: .deploy/chart2-0.1.0.tgz
+~~~~
+
+Podemos ver que se ha creado dos paquetes, el nombre se ha generado con la versión que tenemos asignada en el fichero `Chart.yaml`, esta versión también será la misma que la del `tag` de la release de Github.
+
+***debian@cliente:**~/Public_repository_helm* **$** `ls .deploy/`
+~~~~
+chart1-0.1.0.tgz  chart2-0.1.0.tgz
+~~~~
+
+Ejecutamos `cr upload` para crear versiones y cargar los paquetes.
+
+***debian@cliente:**~/Public_repository_helm* **$** `cr upload -o moralg -r Public_repository_helm -p .deploy -t <<<TOKEN>>>`
+
+Con este comando le indicamos el propietario del repositorio `-o`, el nombre del repositorio `-r` el directorio donde se almacenan los paquetes `-p` y el token de acceso `-t`.
+
+Al ejecutar el comando, no nos devuelve ninguna salida. Si todo ha salido bien, tendremos en nuestro repositorio dos release.
+
+![release](image/release.png)
+
+Continuamos con la creación del fichero `index.yaml` y posteriormente subirlo 
+
+Seleccionamos la rama `repo-helm`
+
+***debian@cliente:**~/Public_repository_helm* **$** `git checkout repo-helm`
+~~~~
+Already on 'repo-helm'
+~~~~
+
+Creamos el fichero `index.yaml` añadiendo los datos del propietario y del repositorio.
+***debian@cliente:**~/Public_repository_helm* **$** `cr index -i ./index.yaml -p .deploy -o moralg -r Public_repository_helm`
+~~~~
+====> UpdateIndexFile new index at ./index.yaml
+====> Found chart1-0.1.0.tgz
+====> Extracting chart metadata from .deploy/chart1-0.1.0.tgz
+====> Calculating Hash for .deploy/chart1-0.1.0.tgz
+====> Found chart2-0.1.0.tgz
+====> Extracting chart metadata from .deploy/chart2-0.1.0.tgz
+====> Calculating Hash for .deploy/chart2-0.1.0.tgz
+--> Updating index ./index.yaml
+~~~~
+
+Ahora tendríamos que tener un fichero `index.yaml` creado con los detalles de los charts y la ruta de sus ficheros.
 
 ~~~~
-Successfully packaged chart and saved it to: /home/debian/prueba/express-crud/charts/mongodb-2.0.5.tgz
+apiVersion: v1
+entries:
+  chart1:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2020-12-07T14:20:15.230371116Z"
+    description: A Helm chart for Kubernetes
+    digest: d3f63b3a4fd81e77ed84833a0306a951c4d3003a5c718d3a1ab5d9ecdd59c8c5
+    name: chart1
+    urls:
+    - https://github.com/MoralG/Public_repository_helm/releases/download/chart1-0.1.0/chart1-0.1.0.tgz
+    version: 0.1.0
+  chart2:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2020-12-07T14:20:15.277111561Z"
+    description: A Helm chart for Kubernetes
+    digest: 04647e714ac8ab7e63efa32a7cd5bec7186af3b086bc50aa98cf4dfaee874aa2
+    name: chart2
+    urls:
+    - https://github.com/MoralG/Public_repository_helm/releases/download/chart2-0.1.0/chart2-0.1.0.tgz
+    version: 0.1.0
+generated: "2020-12-07T14:20:14.977062307Z"
 ~~~~
+
+Subimos el fichero `index.yaml` a nuestro repositorio y comprobamos que existe en Github Pages.
+
+![release_web](image/release_web.png)
+
+Vamos a probar nuestro nuevo repositorio. Añadimos el repositorio con el comando `helm repo add` y utilizando el nombre de nuestro repositorio y la dirección de Github Pages.
+
+***debian@cliente:**~* **$** `helm repo add public_repository_helm https://moralg.github.io/Public_repository_helm/`
+~~~~
+"public_repository_helm" has been added to your repositories
+~~~~
+
+Lo listamos para asegurarnos que esta añadido:
+
+***debian@cliente:**~* **$** `helm repo list`
+~~~~
+NAME                    URL
+django                  https://itswcg.github.io/django-helm/charts/
+bitnami                 https://charts.bitnami.com/bitnami
+stable                  https://charts.helm.sh/stable
+public_repository_helm  https://moralg.github.io/Public_repository_helm/
+~~~~
+
+Ya tenemos nuestro repositorio creado y añadido a nuestro Helm, lo último que podemos hacer es instalar uno de los chart que hemos añadido a nuestro repositorio.
+
+***debian@cliente:**~* **$** `helm install test public_repository_helm/chart1`
+
+~~~~
+NAME: test
+LAST DEPLOYED: Mon Dec  7 14:34:08 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=chart1,app.kubernetes.io/instance=test" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace default port-forward $POD_NAME 8080:80
+~~~~
+
+***debian@cliente:**~* **$** `kubectl get pod`
+~~~~
+NAME                               READY   STATUS    RESTARTS   AGE
+test-chart1-7979df9f94-nv5kk       1/1     Running   0          97s
+~~~~
+
+## Siguientes Pasos
+
+Los siguientes pasos que se podrían realizar para ampliar esta práctica sería la utilización de Helmfile.
+
+Helmfile permite declarar una definición de un cluster de Kubernetes completo en un solo fichero YAML, agrupa múltiples versiones de Helm (instalación de chart de Helm) y permite ajustar una especificación de cada versión en función de un tipo de entorno (desarrolo, prueba, producción) en el que es posible que desee implementar sus aplicaciones.
+
+También podríamos automatizar las actualizaciones de los chart de Helm para nuestro repositorio con [CicleCI](https://circleci.com/). Es un servicio de integración continua muy utilizado por la comunidad de Helm.
+
+## Conclusiones
+
+Después de haber trabajado con Helm, a la conclusión que he llegado, es que al principio cuesta un poco comprender la integración de los objetos de Kubernetes con la sintaxis de Go para crear variables y tener todos los valores en el fichero `values.yaml`, pero una vez controlado, el proceso de gestionar una aplicación en charts a través de helm es mas cómodo. A la hora de realizar un cambio y actualizar la versión, como también lo sencillo que podemos revertir cualquier fallo o configuración no deseada con rollback.
+
+## Webgrafía
+
+Helm. The Chart Template Developer's Guida.
+
+https://helm.sh/docs/chart_template_guide/
+
+
+Helm. Quickstart Guide.
+
+https://helm.sh/docs/intro/quickstart/
+
+Helm. Installing Helm.
+
+https://helm.sh/docs/intro/install/
+
+Helm. Using Helm.
+
+https://helm.sh/docs/intro/using_helm/
+
+Helm. The Chart Best Practices Guide
+.
+https://helm.sh/docs/chart_best_practices/
+
+Helm. Helm Command.
+
+https://helm.sh/docs/helm/
+
+Jfrog. Steering Straight with Helm Chart Best Practices.
+
+https://jfrog.com/blog/helm-charts-best-practices/
+
+DigitalOcean. Cómo implementar Laravel7 y MySQL en Kubernetes con Helm.
+
+https://www.digitalocean.com/community/tutorials/how-to-deploy-laravel-7-and-mysql-on-kubernetes-using-helm-es
+
+Tech. Creating a Helm Chart Repository - Part 1
+
+https://tech.paulcz.net/blog/creating-a-helm-chart-monorepo-part-1/
