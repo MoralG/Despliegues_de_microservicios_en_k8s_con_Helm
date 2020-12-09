@@ -1420,11 +1420,11 @@ Ahora habilitamos Github Pages en los ajustes de nuestro repositorio. La direcci
 
 Le indicamos la rama `repo-helm`, el directorio raíz `/(root)` y le damos a guardar `Save`.
 
-![github-pages](image/github-pages.PNG)
+![github-pages](image/github-pages.png)
 
 Esperamos unos segundos y podremos acceder a la URL que nos proporciona Github Pages.
 
-![github-pages-web](image/github-pages-web.PNG)
+![github-pages-web](image/github-pages-web.png)
 
 Podemos utilizar un combinación de los comandos `helm package` y `helm repo` para construir nuestro repositorio de Helm a mano, o podemos utilizar `chart-releaser` que además de crear nuestros paquetes, nos los cargará como binarios, en una versión de Github, con la versión adecuada.
 
