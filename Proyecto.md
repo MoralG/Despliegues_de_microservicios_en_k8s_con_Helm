@@ -2,9 +2,10 @@
 
 ## Introdución
 
-Helm es un administrador de paquetes para Kubernetes, que ayuda en el proceso de gestión de versiones a desplegar, su empaquetado, proceso de release (forward, rollback, upgrade), etc... de una manera más fácil y rápida.
+Helm es un administrador de paquetes para Kubernetes que ayuda en el proceso de gestión de versiones a desplegar, empaquetar, proceso de release (forward, rollback, upgrade), etc. de una manera fácil y rápida.
 
-Estos paquetes se denominan chart, los cuales son una colección de ficheros que describen un conjunto de recursos del API de Kubernetes. Un ejemplo comparable para entenderlo sería el caso del `apt` o `yum` u otros administradores de paquetes de distribuciones de linux pero para Kubernetes.
+A través de una colección de ficheros, los denominados chart, se describen los recursos de la API de Kubernetes. Un ejemplo comparable sería el caso de `apt`, `yum` u otros administradores de paquetes de distribuciones Linux pero para Kubernetes.
+
 
 Las claves de la utilización de Helm son:
 
@@ -27,10 +28,10 @@ En resumen, la principal función de Helm es definir, instalar y actualizar apli
 * Un clúster de Kubernetes en la versión 1.8 o posterior, con el control de acceso en roles (RBAC) hablitado. Si necesita ayuda para instalar Kubernetes con kubeadm [LEER AQUÍ](https://github.com/MoralG/Trabajando_con_Kubernetes/blob/master/Trabajando_con_Kubernetes.md)
 
 ###### Comprobar la versión de Kubernetes:
+***debian@cliente:**~* **$** `kubectl version`
 ~~~
-kubectl version
-    Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2",   GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean",   BuildDate:"2020-04-16T11:56:40Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
-    Server Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2",   GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean",   BuildDate:"2020-04-16T11:48:36Z", GoVersion:"go1.13.9", Compiler:"gc", Platform:"linux/amd64"}
+Client Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2",   GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean",   BuildDate:"2020-04-16T11:56:40Z", GoVersion:"go1.13.9", Compiler:"gc"Platform:"linux/amd64"}
+Server Version: version.Info{Major:"1", Minor:"18", GitVersion:"v1.18.2",   GitCommit:"52c56ce7a8272c798dbc29846288d7cd9fbae032", GitTreeState:"clean",   BuildDate:"2020-04-16T11:48:36Z", GoVersion:"go1.13.9", Compiler:"gc"Platform:"linux/amd64"}
 ~~~
 
 --------------------------------------
@@ -38,75 +39,67 @@ kubectl version
 * Tener la herramienta de líneas de comando `kubectl` instalada en su equipo local, configurada para poder conectarse al clúster.
 
 ###### Comprobar la conectividad:
+***debian@cliente:**~* **$** `kubectl cluster-info`
 ~~~
-kubectl cluster-info
-    Kubernetes master is running at https://10.0.0.10:6443
-    KubeDNS is running at https://10.0.0.10:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+Kubernetes master is running at https://10.0.0.10:6443
+KubeDNS is running at https://10.0.0.10:6443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 ~~~
 
 ----------------
 
 ## Instalación de Helm
 
-Vamos a instala la herramienta de linea de comando `helm` en nuestro equipo local de trabajo.
+Se va a instalar la herramienta de línea de comandos `helm` en el equipo local de trabajo.
 
-Descargamos la última release de Helm de la versión 3. Para hacer esto nos vamos a la [página oficial](https://github.com/helm/helm/releases) y nos descargamos el fichero `.tar.gz` para Linux
+Se descarga la última release de Helm desde la [página oficial](https://github.com/helm/helm/releases) que será un fichero `.tar.gz` para Linux. 
 
 > #### NOTA 
 > -----------------------
-> Es recomendable que nos descarguemos una versión que este **Verificada**.
+>
+> Es recomendable descargarse una versión **Verificada**.
 
-En el momento de la creación de este tutorial, nos descargamos la versión 3.2.0 de Helm.
-~~~
-wget https://get.helm.sh/helm-v3.3.4-linux-amd64.tar.gz
-~~~
+En este caso, la última versión y con la que se va a trabajar será Helm 3.2.0.
 
-Descromprimimos el fichero:
-~~~
-tar -zxvf helm-v3.3.4-linux-amd64.tar.gz
-~~~
+***debian@cliente:**~/tmp* **$** `wget https://get.helm.sh/helm-v3.3.4-linux-amd64.tar.gz`
 
-Tenemos que mover el binario del directorio que hemos desempaquetado a la dirección, en mi caso, `/usr/local/bin/helm`
+Se descomprime el fichero:
 
-~~~
-sudo mv linux-amd64/helm /usr/local/bin/helm
-~~~
+***debian@cliente:**~/tmp* **$** `tar -zxvf helm-v3.3.4-linux-amd64.tar.gz`
 
-Comprobamos la versión
+Hay que mover el binario del directorio que se ha desempaquedo a `/usr/local/bin/helm`:
+
+***debian@cliente:**~/tmp* **$** `sudo mv linux-amd64/helm /usr/local/bin/helm`
+
+Se comprueba la versión:
+
+***debian@cliente:**~* **$** `helm version`
 ~~~
-helm version
-    version.BuildInfo{Version:"v3.2.0", GitCommit:"e11b7ce3b12db2941e90399e874513fbd24bcb71",   GitTreeState:"clean", GoVersion:"go1.13.10"}
+version.BuildInfo{Version:"v3.2.0", GitCommit:"e11b7ce3b12db2941e90399e874513fbd24bcb71",   GitTreeState:"clean", GoVersion:"go1.13.10"}
 ~~~
 
 
 > ##### NOTA
 > --------------------
 > Para mayor seguridad es recomendable quitar los permisos de lectura a los grupos para el fichero de configuración del cluster.
-> Ejecutamos el siguiente comando:
-> ````shell
-> sudo chmod 600 /home/debian/.kube/mycluster.conf
-> ````
+>
+> Ejecutando el siguiente comando:
+> ***debian@cliente:**~* **$** `sudo chmod 600 /home/debian/.kube/mycluster.conf`
 
 
-Ya tenemos instalado Helm en la version 3, lo siguiente que vamos a ver es como iniciar el repositorio chart de Helm.
+Una vez instalado Helm 3, lo siguiente es indicar el repositorio chart de Helm.
 
-### Agregando un Helm Chart Repository
+### Agregar un Helm Chart Repository
 
-Vamos a agregar el repositorio de chart de Helm para poder instalar los chart que queramos.
+Se agrega el repositorio de chart de Helm para poder instalar los chart que sean necesarios.
 
+***debian@cliente:**~* **$** `helm repo add stable https://kubernetes-charts.storage.googleapis.com/`
 ~~~
-helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-    "stable" has been added to your repositories
-~~~
-
-Una vez agregado, podemos listar los chart con el siguiente comando:
-
-~~~
-helm search repo stable
+"stable" has been added to your repositories
 ~~~
 
-Nos saldrá una lista de chart oficiales para poder instalar en nuestro cluster
+Con el repositorio agregado se pueden listar los chart con el siguiente comando:
 
+***debian@cliente:**~* **$** `helm search repo stable`
 ~~~
 NAME                                 	CHART VERSION	APP VERSION            	DESCRIPTION
 stable/acs-engine-autoscaler         	2.2.2        	2.1.1                  	DEPRECATED Scales worker nodes within agent pools
@@ -120,66 +113,63 @@ stable/ambassador                    	5.3.1        	0.86.1                 	A He
 
 ## Guía rápida
 
-### Instalando un Chart oficial
+### Instalación de un Chart oficial
 
-Vamos a instalar un chart del repositorio oficial de Helm, para hacer esto tenemos que actualizar primero la información de los chart disponibles en el repositorio `stable` con el comando `helm repo update`.
+A continuación, se va a instalar un chart del repositorio oficial de Helm. Para ellos, en primer lugar, hay que actualizar la información de los chart disponibles en el repositorio `stable` con el comando `helm repo update`.
 
 > #### ESTRUCTURA DEL COMANDO
 > --------------------
->* **`helm repo update [flags]`**
+> * **`helm repo update [flags]`**
 >
->###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_repo_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+> ###### Más información sobre el comando repo update en la [página oficial de Helm]](https://helm.sh/docs/helm/helm_repo_update/) o con el comando `helm help` para una descripción general y con el parámetro `-h` para una descripción del comando concreto.
 
+***debian@cliente:**~* **$** `helm repo update`
 ~~~
-helm repo update
-    Hang tight while we grab the latest from your chart repositories...
-    ...Successfully got an update from the "stable" chart repository
-    Update Complete. ⎈ Happy Helming!⎈
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "stable" chart repository
+Update Complete. ⎈ Happy Helming!⎈
 ~~~
 
-No ha salido un mensaje de que esta todo actualizado, ahora vamos a proceder a instalar un chart. En nuestro caso vamos a probar con MySQL.
+Tras completar la actualización, se procede a la instalación de un chart, en este caso MySQL.
 
-Antes de empezar a instalar, tenenemos que saber el nombre del chart, para eso utilizamos el comando `helm search repo`.
+Antes de empezar a instalar, hay que saber el nombre del chart. Para eso se utiliza el comando `helm search repo`.
 
 > #### ESTRUCTURA DEL COMANDO
 > --------------------
 > * **`helm search repo [keyword] [flags]`**
 > 
-> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_search_repo/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+> ###### Más información sobre el comando search repo en la [página oficial de Helm]](https://helm.sh/docs/helm/helm_search_repo/) o con el comando `helm help` para una descripción general y con el parámetro `-h` para una descripción del comando concreto.
 
-Vamos a buscar la **release stable** de mysql, pero si queremos otras versiones podemos utilizar la flags `--devel` para prerelease o `--version [version]` para que nos muestre la version concreta.
+Se busca la **release stable** de mysql. Para buscar otras versiones se utiliza utiliza el parámetro `--devel` para prerelease o `--version [version]` para versiones concretas.
 
+***debian@cliente:**~* **$** `helm search repo mysql
 ~~~
-helm search repo mysql
-    NAME                            	CHART VERSION	APP VERSION	    DESCRIPTION
-    stable/mysql                    	1.6.3        	5.7.28     	Fast, reliable, scalable, and easy to   use open-...
-    stable/mysqldump                	2.6.0        	2.4.1      	A Helm chart to help backup MySQL   databases usi...
-    stable/prometheus-mysql-exporter	0.5.2        	v0.11.0    	A Helm chart for prometheus mysql   exporter with...
-    stable/percona                  	1.2.1        	5.7.26     	free, fully compatible, enhanced, open  source d...
-    stable/percona-xtradb-cluster   	1.0.3        	5.7.19     	free, fully compatible, enhanced, open  source d...
-    stable/phpmyadmin               	4.3.5        	5.0.1      	DEPRECATED phpMyAdmin is an mysql   administratio...
-    stable/gcloud-sqlproxy          	0.6.1        	1.11       	DEPRECATED Google Cloud SQL     Proxy
-    stable/mariadb                  	7.3.14       	10.3.22    	DEPRECATED Fast, reliable, scalable,    and easy t...
+NAME                            	CHART VERSION	APP VERSION	    DESCRIPTION
+stable/mysql                    	1.6.3        	5.7.28     	Fast, reliable, scalable, and easy to   use open-...
+stable/mysqldump                	2.6.0        	2.4.1      	A Helm chart to help backup MySQL   databases usi...
+stable/prometheus-mysql-exporter	0.5.2        	v0.11.0    	A Helm chart for prometheus mysql   exporter with...
+stable/percona                  	1.2.1        	5.7.26     	free, fully compatible, enhanced, open  source d...
+stable/percona-xtradb-cluster   	1.0.3        	5.7.19     	free, fully compatible, enhanced, open  source d...
+stable/phpmyadmin               	4.3.5        	5.0.1      	DEPRECATED phpMyAdmin is an mysql   administratio...
+stable/gcloud-sqlproxy          	0.6.1        	1.11       	DEPRECATED Google Cloud SQL     Proxy
+stable/mariadb                  	7.3.14       	10.3.22    	DEPRECATED Fast, reliable, scalable,    and easy t...
 ~~~
 
-Nos ha listado todo lo que tiene que ver con el término **mysql** en su versión estable. Ahora vamos a instalar el chart **stable/mysql** con la versión 1.6.3 del chart.
+De esta forma, lista todo lo que tiene que ver con el término **mysql** en su versión estable. En este caso, se va a instalar el chart **stable/mysql** con la versión 1.6.3 del chart.
 
-Para instalar un chart tenemos que utilizar el comando `helm install`.
+Para instalar un chart hay que utilizar el comando `helm install`.
 
 > #### ESTRUCTURA DEL COMANDO
 > --------------------
 > * **`helm install [NAME] [CHART] [flags]`**
 > 
-> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_install/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+> ###### Más información sobre el comando install en la [página oficial de Helm]](https://helm.sh/docs/helm/helm_install/) o con el comando `helm help` para una descripción general y con el parámetro `-h` para una descripción del comando concreto.
 
-Vamos a asignarle el nombre de **maria** a nuestro chart, pero podemos utilizar la flags `--generate-name`para asignarle uno automáticamente.
+Se le asigna el nombre de **maria** al chart. También se puede asignar un nombre automáticamente con el parámetro `--generate-name`.
 
-~~~
-helm install maria stable/mysql
-~~~
+***debian@cliente:**~* **$** `helm install maria stable/mysql`
 
-Al instalar dicho chart, en el caso de mysql, nos sale una información del chart, como se muestra a continuación:
-
+Al instalar dicho chart, en el caso de mysql, aparece la información del chart, como se muestra a continuación:
 ~~~
 NAME: maria
 LAST DEPLOYED: Thu Apr 23 17:09:13 2020
@@ -219,9 +209,10 @@ To connect to your database directly from outside the K8s cluster:
 
 > #### NOTA
 > --------------------
-> Si queremos ver la opciones configurables de un chart, podemos usar `helm show values <nombre_chart>`
+> Para ver la opciones configurables de un chart: `helm show values <nombre_chart>`
+> 
+> ***debian@cliente:**~* **$** `helm show values stable/mariadb`
 > ~~~
-> helm show values stable/mariadb
 > ## Global Docker image parameters
 > ## Please, note that this will override the image parameters, including dependencies, configured to use > the global value
 > ## Current available global Docker image parameters: imageRegistry and imagePullSecrets
@@ -248,85 +239,83 @@ To connect to your database directly from outside the K8s cluster:
 > .
 > .
 > ~~~
-> Sabiendo las opciones que podemos configurar, podemos modificarlar de dos maneras:
-> * Indicandole los parámetros en un fichero `.yaml` y luego indicarle dicho fichero en la instalación del chart.
+> Las opciones se pueden modificar de dos formas:
+> * Indicando los parámetros en un fichero `.yaml`:
 >
-> Creamos el fichero `yaml` indicandole las opciones
-> ~~~
-> echo '{mariadbUser: usuario1, mariadbDatabase: usuario_bd}' > prueba.yaml
-> ~~~
-> Indicamos el fichero `yaml` en la instalación, con el parámetro `-f`
-> ~~~
-> helm install -f prueba.yaml stable/mariadb --generate-name
-> ~~~
-> * Le indicamos las opciones con el parametro `--set`, en el moemnto de la instalación
-> ~~~
-> helm install stable/mariadb --generate-name --set name=usuario1
-> ~~~
+> Se crea el fichero `.yaml` indicando las opciones:
+> 
+> ***debian@cliente:**~* **$** `echo '{mariadbUser: usuario1, mariadbDatabase: usuario_bd}' > prueba.yaml`
+> 
+> Y se referencia dicho fichero `.yaml` en la instalación, con el parámetro `-f`:
+> 
+> ***debian@cliente:**~* **$** `helm install -f prueba.yaml stable/mariadb --generate-name`
+>
+> * Indicando las opciones con el parametro `--set` en la instalación:
+> 
+> ***debian@cliente:**~* **$** `helm install stable/mariadb --generate-name --set name=usuario1`
+> 
 
-Ya tenemos instalado nuestro chart y nos muestra varia información, como la descripción, el nombre, el namespace, etc. Pero además nos muestra la instrucciones para conectarse a la base de datos.
-
-Para ver los chart que estan lanzados con Helm podemos utilizar el comando `helm ls`.
+Una vez instalado el chart de MySQL, se muestra información como la descripción, el nombre, el namespace, etc. Además, muestra las instrucciones para conectarse a la base de datos.
 
 
+Para ver los chart lanzados con Helm se utiliza el comando `helm ls`.
+
+***debian@cliente:**~* **$** `helm ls`
 ~~~
-helm ls
-    NAME 	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP     VERSION
-    maria	default  	1       	2020-04-23 17:39:05.877933281 +0000 UTC	deployed	mysql-1.6.3	5.7.28
-~~~
-### Actualizando un versión
-
-Cuando se lanza una nueva versión de un chart, cuando desea cambiar la configuración de este, podemos usar `helm upgrade`
-
-Una actualización toma una versión existente y la actualiza de acuerdo con la información que proporciones, en el caso de Helm solo se actualiza las cosas qie no han cambiado desde la última versión.
-
-En este caso, para ver un ejemplo, vamos a cambiar la configuración del chart instalado anteriormente. Vamos a crear un fichero `yaml` con la opción `mariadbUser` modificada y creareamos una nueva versión.
-
-~~~
-echo '{mariadbUser: usuario1}' > prueba.yaml
+NAME 	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP     VERSION
+maria	default  	1       	2020-04-23 17:39:05.877933281 +0000 UTC	deployed	mysql-1.6.3	5.7.28
 ~~~
 
+### Actualización de una versión
+
+Para lanzar una nueva versión de un chart se utiliza el comando `helm upgrade`.
+
+Una actualización toma una versión existente y la actualiza de acuerdo con la información que se proporcione. En el caso de Helm solo se actualizan las cosas que han cambiado desde la última versión.
+
+Como ejemplo, se va a cambiar la configuración del chart instalado anteriormente. Creando un fichero `yaml` con la opción `mariadbUser` modificada y se crea una nueva versión.
+
+***debian@cliente:**~* **$** `echo '{mariadbUser: usuario1}' > prueba.yaml`
+
+***debian@cliente:**~* **$** `helm upgrade -f prueba.yaml maria stable/mariadb`
+
+***debian@cliente:**~* **$** `helm get values maria`
 ~~~
-helm upgrade -f prueba.yaml maria stable/mariadb
+USER-SUPPLIED VALUES:
+mariadbUser: usuario1
 ~~~
 
+
+***debian@cliente:**~* **$** `helm history maria`
 ~~~
-helm get values maria
-    USER-SUPPLIED VALUES:
-    mariadbUser: usuario1
+REVISION	UPDATED                 	STATUS     	CHART         	APP VERSION	DESCRIPTION
+1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
 ~~~
 
-~~~
-helm history maria
-    REVISION	UPDATED                 	STATUS     	CHART         	APP VERSION	DESCRIPTION
-    1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
-~~~
+### Desinstalación de una versión
 
-### Desinstalando una versión
-
-Para desinstalar una versión tenenemos que utilizar el comando `helm uninstall`.
+Para desinstalar una versión hay que utilizar el comando `helm uninstall`.
 
 
 > #### ESTRUCTURA DEL COMANDO
 > --------------------
 > * **`helm uninstall RELEASE_NAME [...] [flags]`**
 > 
-> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_plugin_uninstall/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+> ###### Más información sobre el comando uninstall en la [página oficial de Helm]](https://helm.sh/docs/helm/helm_plugin_uninstall/) o con el comando `helm help` para una descripción general y con el parámetro `-h` para una descripción del comando concreto.
 
+Se va a desinstalar el chart **maria** con la opción `--feep-history` para mantener el historial de versión.
 
-Vamos a realizar la desinstalación del chart **maria** pero vamos a añadir el flag `--feep-history` para mantener el historial de versión.
-
+***debian@cliente:**~* **$** `helm uninstall maria --keep-history`
 ~~~
-helm uninstall maria --keep-history
-    release "maria" uninstalled
+release "maria" uninstalled
 ~~~
 
-Con este flag lo que conseguimos es poder rastrear las versiones incluso después de haberlas desinstalado, podiendo auditar el historial de un cluster e incluso recuperar una versión con el comando `helm rollback`.
+Con esta opción se consigue un rastreamiento de las veriones incluso después de la desinstalación, pudiendo auditar el historial de un cluster e incluso recuperar una versión con el comando `helm rollback`.
 
-Podemos ver con el comando `helm status`, el estado actual del chart.
+Con el comando `helm status` se ve el estado actual del chart. En este caso, ha sido desinstalado:
 
+
+***debian@cliente:**~* **$** `helm status maria`
 ~~~
-helm status maria
 NAME: maria
 LAST DEPLOYED: Thu Apr 23 17:39:05 2020
 NAMESPACE: default
@@ -336,69 +325,65 @@ STATUS: uninstalled
 .
 ~~~
 
-Nos muestra que ha sido desinstalada.
+### Rollback
 
-### Realizar un Rollback
-
-Vamos a realizar un rollback para revertir una release a una versión anterior con el comando `helm rollback`.
+Se va a realizar un rollback para revertir una release a una versión anterior con el comando `helm rollback`.
 
 > #### ESTRUCTURA DEL COMANDO
 > --------------------
 > * **`helm rollback <RELEASE> [REVISION] [flags]`**
 > 
-> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_rollback/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+> ###### Más información sobre el comando rollback en la [página oficial de Helm]](https://helm.sh/docs/helm/helm_rollback/) o con el comando `helm help` para una descripción general y con el parámetro `-h` para una descripción del comando concreto.
 
-Si hemos borrado una versión de un chart y por consiguiente, no nos sale con el comando `helm ls` vamos a tener que utilizar `helm history`.
+Si se ha borrado una versión de un chart y, por consiguiente, no aparece con `helm ls` hay que utilizar `helm history`.
 
+***debian@cliente:**~* **$** `helm history maria`
 ~~~
-helm history maria
-    REVISION	UPDATED                 	STATUS     	CHART      	APP VERSION	DESCRIPTION
-    1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
-    2       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	    5.7.28     	Uninstallation complete
-~~~
-
-Sabiendo esto vamos a realizar el **rollback**.
-
-~~~
-helm rollback maria 1
-    Rollback was a success! Happy Helming!
+REVISION	UPDATED                 	STATUS     	CHART      	APP VERSION	DESCRIPTION
+1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
+2       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	    5.7.28     	Uninstallation complete
 ~~~
 
-Nos ha indicado que esta todo correcto y listamos de nuemo con `helm ls` los chart lanzados:
+Conociendo la revisión a la que se quiere revertir se realiza el **rollback**:
 
+***debian@cliente:**~* **$** `helm rollback maria 1`
 ~~~
-helm ls
-    NAME 	NAMESPACE	REVISION	UPDATED                               	STATUS  	CHART      	APP     VERSION
-    maria	default  	2       	2020-04-23 17:51:41.84658262 +0000 UTC	deployed	mysql-1.6.3	5.7.    28
-~~~
-
-Como podemos ver, el chart **maria** aparece de nuevo pero con una diferencia, la revisión es la número 2.
-
-También podemos ver con `helm history` que nos aparece la revisión 1 desinstalada y la revisión 2 lanzada.
-
-~~~
-helm history maria
-    REVISION	UPDATED                 	STATUS     	CHART      	APP VERSION	DESCRIPTION
-    1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
-    2       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	    5.7.28     	Uninstallation complete
-    3       	Thu Apr 23 17:51:41 2020	deployed	mysql-1.6.3	    5.7.28     	Uninstallation complete
+Rollback was a success! Happy Helming!
 ~~~
 
-## Creando Charts en Helm
+A continuación, se listan los chart para comprobar que se ha realizado correctamente:
 
-En esta guía vamos a desarrollar nuestros propios Charts en Helm. Es recomentable que se mire antes la [Instalación y configuración](https://github.com/MoralG/Despliegues_de_microservicios_en_k8s_con_Helm_y_OpenShift/blob/master/Proyecto.md#instalaci%C3%B3n-de-helm) de Helm y la [Guía rápida](https://github.com/MoralG/Despliegues_de_microservicios_en_k8s_con_Helm_y_OpenShift/blob/master/Proyecto.md#gu%C3%ADa-r%C3%A1pida).
+***debian@cliente:**~* **$** `helm ls`
+~~~
+NAME 	NAMESPACE	REVISION	UPDATED                               	STATUS  	CHART      	APP     VERSION
+maria	default  	2       	2020-04-23 17:51:41.84658262 +0000 UTC	deployed	mysql-1.6.3	5.7.    28
+~~~
 
-Si quiere saber el funcionamiento de algunos comando de Helm puede ir a la [Guía de comandos](https://helm.sh/docs/helm/) de Helm.
+El chart **maria** aparece de nuevo pero con la revisión número 2.
 
-Un Chart es una colección de ficheros que describen un cojunto de recursos de Kubernetes. Podemos usar un solo chart para implementar un pod memcached, o si nos vamos a algo mas complicado, una pila completa de aplicaciones web con servidores HTTP, bases de datos, cache, etc.
+Ahora, con `helm history` aparece la revisión 1 desinstalada y la revisión 2 lanzada.
 
-Es bueno tener unas prácticas recomendadas para crear un chart con Helm, por eso vamos a ir paso a paso creando el chart para una aplicación CRUD (Create, Read, Update, Delete) en Java y luego veremos como podemos sacarle partido a los chart oficiales o a los creados por la comunidad, desplegando un chart oficial `stable/lamp` pero añadiendo nuestros propios valores y secrets.
+***debian@cliente:**~* **$** `helm history maria`
+~~~
+REVISION	UPDATED                 	STATUS     	CHART      	APP VERSION	DESCRIPTION
+1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
+2       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	    5.7.28     	Uninstallation complete
+3       	Thu Apr 23 17:51:41 2020	deployed	mysql-1.6.3	    5.7.28     	Uninstallation complete
+~~~
+
+## Creación de Charts en Helm
+
+A continuación, se van a desarrollar Charts propios en Helm.
+
+Como se dijo anteriormente, un chart es una colección de ficheros que describen un cojunto de recursos de Kubernetes. Se puede usar un solo chart para implementar un pod memcached, o, si es algo más complicado, una pila completa de aplicaciones web con servidores HTTP, bases de datos, cache, etc.
+
+Se va a crear un chart paso a paso para una aplicación CRUD (Create, Read, Update, Delete) en Java. Después, se estudiará cómo sacarle partido a los chart oficiales o a los creados por la comunidad, desplegando un chart oficial `stable/lamp` pero añadiendo valores propios y secrets.
 
 ### Despliegue de Chart CRUD utilizando express.js y mongodb
 
-Vamos a desplegar, con ayuda de Helm, un aplicación CRUD (Una aplicación simple donde se va a poder crear, leer, actualizar y eliminar datos) con la ayuda de Express.js (Es uno de los framework de aplicaciones para Node.js). También necesitaremos una base de datos, en nuestro caso vamos a utilizar Mongodb, y la introduciremos como dependencia.
+Se va a desplegar una aplicación CRUD, aplicación simple donde crear, leer, actualizar y elilminar datos, con la ayuda de Express.js, uno de los framework de aplicaciones para Node.js. También será necesario una base de datos, en este caso se va a utilizar MongoDB, que se introducirá como dependencia.
 
-Crearemos todos los objetos necesarios para el despliegue en Kubernetes con ficheros YAML, pero modificandolos para que sean funcionales para utilizarlos con Helm. Además, explicaremos para que se utilizan las dependencias en los chart de Helm.
+Se crearan todos los objetos necesarios para el depliegue en Kubernetes con ficheros YAML pero modificándolos para que sean funcionales para utilizarlos con Helm. Además, se explicará para qué se utilizan las dependencias en los chart de Helm.
 
 > #### NOTA
 > ----------------------
@@ -415,13 +400,13 @@ Crearemos todos los objetos necesarios para el despliegue en Kubernetes con fich
 >   drink: {{ quote .Values.favorite.drink }}
 >   food: {{ quote .Values.favorite.food }}
 > ````
-> Como podemos ver, se mete dentro de cuatros corchetes ``{{ }}`` y la estructura es muy fácil.
+> La estructura es muy fácil, se basa en el uso de cuatro llaves `{{ }}` dónde se indican las funciones y atributos.
 > ~~~~
 > functionName arg1 arg2 ...
 > ~~~~
-> Hay varias tipos de funciones que podemos utilizar. Si quereís saber mas sobre los tipos de funciones que podemos utilizar [LEER AQUÍ](https://helm.sh/docs/chart_template_guide/function_list/)
+> Hay varias tipos de funciones que se pueden utilizar. Para saber más sobre los tipos de funciones [LEER AQUÍ](https://helm.sh/docs/chart_template_guide/function_list/)
 > 
-> Lo que hay que tener claro son los argumentos, ya que al utilizar `.Values`, el valor predeterminado que va a adquirir es el que le indicamos en el fichero `values.yaml`.
+> Hay que tener claro los argumentos, ya que al utilizar `.Values`, el valor predeterminado que va a adquirir es el que se indica en el fichero `values.yaml`.
 > 
 > Ejemplo de fichero values.yaml:
 > ~~~~
@@ -429,16 +414,14 @@ Crearemos todos los objetos necesarios para el despliegue en Kubernetes con fich
 >   drink: coffee
 >   food: pizza
 > ~~~~
-> Iremos explicando las funciones y argumentos que salgan en la configuración de nuestro despliegue.
 
-Vamos a empezar creando el chart:
-
+Creación del chart:
 ***debian@cliente:**~* **$** ``helm create app-crud``
 ~~~
 Creating app-crud
 ~~~
 
-Al crear un Chart, dispondremos de unos directorios en forma de árbol, los cuales podemos modificar y una vez terminado la modificación, Instalarlos con la versión indicada.
+Al ejecutar el comando anterior, se crean los directorios y ficheros base para el chart. Éstos se modificarán para configurar la aplicación y se desplegará, con una release concreta, y de forma creciente si se actualizara.
 
 ~~~
 app-crud/
@@ -458,35 +441,31 @@ app-crud/
 3 directories, 8 files
 ~~~
 
-Vamos a repasar los ficheros y directorios necesarios para realizar un buen despligue en Kubernetes.
+Los ficheros y directorios necesarios para relizar un buen despliegue en Kubernetes son:
 
 |Objeto          | Descripción
-|----------------|-------------------------------
-|**charts/**| Directorio donde se añadiran los chart que necesitemos como dependencias.
-|**Chart.yaml**| Fichero yaml que contiene la información del chart.
+|----------------|------------------------------
+|**charts/**| Directorio donde se añadirán los chart necesarios como dependencias.
+|**Chart.yaml**| Fichero YAML que contiene la información del chart.
 |**README.md**| Fichero utilizado para la descripción del chart.
-|**values.yaml**| Fichero que contiene los distintos valores por defectos que le pasamos al chart.
-|**templates/**| Directorio donde añadiremos los recursos de Kubernetes. Añadiremos los diferentes objetos mediante ficheros yaml.
-|**templates/NOTES.txt**| Fichero opcional, que contiene breves notas de uso, estas se muestran al terminar el comando `helm install`.
+|**values.yaml**| Fichero que contiene los distintos valores por defectos (que le pasamos al chart).
+|**templates/**| Directorio con los recursos de Kubernetes. Se añaden los diferentes objetos mediante ficheros YAML.
+|**templates/NOTES.txt**| Fichero opcional, que contiene breves notas de uso. Estas se muestran al terminar el comando `helm install`.
 |**templates/_helpers.tpl**| Fichero opcional, utilizado para definir algunos valores que pueden ser reutilizables en la creación del chart.
 
-A partir de aquí tenemos que preguntarnos que vamos a necesitar.
-
-* ¿Que imagen o imagenes vamos a utilizar?
-* ¿Que dependencias necesitamos definir?
-* ¿Para nuestra aplicación necesitamos volumenes persistentes?
+Por último, se elige la imagen o imágenes que se va a utilizar, las dependencias que se necesitan definir y la necesidad de volúmenes persistentes.
 
 #### Fichero Chart.yaml
 
-Para empezar vamos a modificar los metadatos del fichero `Chart.yaml`.
+En primer lugar, se modifica los metadatos del fichero `Chart.yaml`.
 
 ```yaml
-# Versión de la APi del chart, ira subiendo cada vez que hagamos un nuevo despliegue del chart.
+#Versión de la API del chart. Sube con un nuevo despliegue del chart.
 apiVersion: v1
-# Versión de la aplicación que vamos a desplegar.
+#Versión de la aplicación que se va a desplegar.
 appVersion: "1.0.0"
 description: Aplicacion CRUD en Helm chart con express.js y mongodb.
-# Nombre que le asignaremos al chart.
+# Nombre del chart
 name: app-crud
 # Versión del empaquetado del chart.
 version: 0.1.0
@@ -499,30 +478,29 @@ maintainers:
 icon: https://res.cloudinary.com/practicaldev/image/fetch/s--5IllY723--/c_imagga_scale,f_auto,fl_progressive,h_900,q_auto,w_1600/https://thepracticaldev.s3.amazonaws.com/i/a3exuz06e9h212pandfr.png
 ```
 
-Ahora vamos a definir la dependencia, dado que nuestra aplicación necesita la base de datos mongodb, debemos especificarla en el fichero `Chart.yaml` con el campo `dependencies`.
+Se define la dependencia. Dado que la aplicación necesita una base de datos, MongoDB, se necesita especificarla en el campo `dependencies` del fichero `Chart.yaml`.
 
 ```yaml
 dependencies:
 # Nombre del chart.
 - name: mongodb
-# Versión del empaquetado del chart, en este caso la últma estable "latest". 
+# Versión del empaquetado del chart, en este caso la última estable "latest". 
  version: latest
-# Alojamiento donde la descargaremos.
- repository: https://kubernetes-charts.storage.googleapis.com/
-# Opcional. Esto hará que el fichero "values.yaml" del chart principal se pueda añadir valores, mientras este el atributo "mongodb.enabled" en "true".
+# Alojamiento.
+repository: https://kubernetes-charts.storage.googleapis.com/
+# Opcional. Esto hará que el fichero "values.yaml" del chart principal se puedan añadir valores, mientras este el atributo "mongodb.enabled" en "true".
  condition: mongodb.enabled
 ```
 
-Ya tenemos las dependencias definidas, ahora hay que sincronizar las dependencias deseadas y las dependencias reales almacenadas en el directorio `chart/`, para esto vamos a utilizar el comando `helm dep update`.
+Una vez estén las dependencias definidas hay que sincronizarlas con las dependencias reales almacenadas en el directorio `chart/`. Para ello, se utiliza el comando `helm dep update`.
 
 > #### ESTRUCTURA DEL COMANDO
 > --------------------
 > * **`helm dep update CHART [flags]`**
 >
-> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_dependency_update/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+> ###### Más información sobre el comando dep update en la [página oficial de Helm]](https://helm.sh/docs/helm/helm_dependency_update/) o con el comando `helm help` para una descripción general y con el parámetro `-h` para una descripción del comando concreto.
 
 ***debian@cliente:**~/app-crud* **$** `helm dep update`
-
 ```shell
 Hang tight while we grab the latest from your chart repositories...
 ...Successfully got an update from the "django" chart repository
@@ -535,19 +513,18 @@ Downloading mongodb from repo https://kubernetes-charts.storage.googleapis.com/
 Deleting outdated charts
 ```
 
-Como muestra en la salida del comando anterior, un chart se ha guardado. Comprobamos que se ha guardado en el directorio `chart/`.
+Como muestra en la salida del comando anterior, un chart se ha guardado. Se comprueba en el directorio `chart/`.
 
 ***debian@cliente:**~/app-crud* **$** `ls -l charts/`
-
 ~~~
 -rw-r--r-- 1 debian debian 5742 Nov 30 09:27 mongodb-2.0.5.tgz
 ~~~
 
 #### Fichero deployment.yaml
 
-Lo siguiente que tenemos que hacer es modificar un poco el fichero `deployment.yaml`, que es el recurso que se va a encargar de definir el control de réplicas, escabilidad de pods, etc...
+Lo siguiente será modificar el fichero `deployment.yaml`, que es el recurso que se va a encargar de definir el control de réplicas, escabilidad de pods, etc.
 
-Añadimos algunas label, para tener un control y una comodidad a la hora de listar y trabajar con los objetos que vamos a crear.
+Se añaden algunas label para tener más control y comodidad al listar y trabajar con los objetos se van a crear.
 
 ```yaml
 labels:
@@ -559,14 +536,14 @@ labels:
 
 > #### NOTA
 > ----------------------
-> La función **template** hace referencia al código definido en el fichero `_helpers.tlp`. Te lo muestro a continuación:
+> La función **template** hace referencia al código definido en el fichero `_helpers.tlp`. Se muestra a continuación:
 >
 > ~~~~
 > {{- define "express-crud.name" -}}
 > {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 > {{- end -}}
 > ~~~~
-> Esto define el atributo `express-crud.name` con el nombre del chart extraido del fichero `Chart.yaml` y podemos unirle una cadena extra si añadimos el argumento `nameOverride` al fichero ``values.yaml``.
+> Esto define el atributo `express-crud.name` con el nombre del chart extraido del fichero `Chart.yaml` y se puede unir una cadena extra si se añade el argumento `nameOverride` al fichero ``values.yaml``.
 >
 > ~~~~
 > {{- define "express-crud.chart" -}}
@@ -576,7 +553,7 @@ labels:
 > Esto define el atributo `express-crud.chart` con el nombre unido a la version del chart extraido del fichero `Chart.yaml`.
 >
 > 
-> Explicado esto, saber que: 
+> Hay que tener en cuenta que: 
 > 
 > * `.Chart` hace referencia al fichero `Chart.yaml`.
 > 
@@ -584,7 +561,7 @@ labels:
 > 
 > * `.Release` hace referencia al nombre del objeto asignado en el despliegue.
 
-Añadimos variables de entornos para configurar los valores del chart de mongodb.
+Se añaden variables de entorno para configurar los valores del chart de MongoDB.
 
 ```yaml
 env:
@@ -612,7 +589,7 @@ mongodb:
   mongodbDatabase: test
 ```
 
-Modificamos el parámetro `image` para actualizar el chart de Helm con una nueva versión de la aplicación simplemente cambiando el valor en `Chart.yaml`.
+Se modifica el parámetro `image` para actualizar el chart con Helm a una nueva versión de la aplicación cambiando el valor en `Chart.yaml`.
 
 ```yaml
 image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
@@ -622,7 +599,7 @@ image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.imag
 > ----------------------
 > La función **default** se utiliza para asignar un valor por defecto en el caso que no se especifique el atributo en el fichero ``values.yaml``.
 > 
-> Lo que quiere decir este parte del código ``{{ default .Chart.AppVersion .Values.image.tag }}`` es que si no se especifica un atributo `image.tag` en el fichero `values.yaml`, se extraerá del atributo `AppVersion` del fichero `Chart.yaml`.
+> ``{{ default .Chart.AppVersion .Values.image.tag }}`` quiere decir que si no se especifica un atributo `image.tag` en el fichero `values.yaml`, se extraerá del atributo `AppVersion` del fichero `Chart.yaml`.
 
 * Valores del fichero `values.yaml` referentes a la parte de `Values.image`:
 ```yaml
@@ -632,7 +609,7 @@ image:
   pullPolicy: IfNotPresent
 ```
 
-Añadimos las siguientes lineas para poder modificar los valores referente al puerto interno, protocolo, etc, desde el fichero `values.yaml`.
+Se añaden las siguientes líneas para poder modificar los valores referentes al puerto interno, protocolo, etc. desde el fichero `values.yaml`.
 
 ```yaml
 ports:
@@ -641,7 +618,7 @@ ports:
   protocol: {{ .Values.service.protocol }}
 ```
 
-Siempre es bueno agregar una prueba liveness y readiness para verificar el estado continuo de la aplicación. Para esto se utiliza las sondas.
+Una buena práctica es agregar una prueba liveness y readiness para verificar el estado continuo de la aplicación. Para esto se utilizan las sondas.
 
 ```yaml
 livenessProbe:
@@ -677,7 +654,7 @@ readinessProbe:
   failureThreshold: 10 
 ```
 
-Por último vamos a añadir un `initContainers` para mantener en pendiente el inicio de nuestra aplicación hasta que la base de datos esté en funcionamiento.
+Por último, se va a añadir un `initContainers` para mantener en pendiente el inicio de la aplicación hasta que la base de datos esté en funcionamiento.
 
 ```yaml
 initContainers:
@@ -699,13 +676,12 @@ initContainerImage: "alpine:3.6"
 
 > #### NOTA
 > ------------------------
-> Lo que realiza el código añadido en el `initContainers` es un bucle, de manera básica, mientras la condición sea falsa, "`until`", del contenedor ``{{ .Release.Name }}-mongodb``, tenga que esperar para iniciarse, por eso el comando `sleep`.
+> Lo que realiza el código añadido en `initContainers.command` es un bucle con una condición. La condición, `until`, es que mientras el contenedor `{{ .Release.Name }}-mongodb` no esté creado, el valor es falso y matiene el estado pendiente gracias al comando `sleep`, hasta que sale del bucle.
 
 #### Fichero service.yaml
 
-Ya tenemos nuestro fichero de despliegue listo, ahora vamos a modificar el fichero `service.yaml` para exponer nuestra aplicación al exterior.
+Con el fichero de despliegue listo, se va a modificar el fichero `service.yaml` para exponer nuestra aplicación al exterior.
 Un servicio permite que la aplicación reciba trafico a través de una dirección IP. Los servicios se pueden exponer de diferentes formas especificando un tipo:
-
 
 |Tipo            | Descripción
 |----------------|-------------------------------
@@ -713,9 +689,10 @@ Un servicio permite que la aplicación reciba trafico a través de una direcció
 |**NodePort**| Se puede acceder al servicio desde fuera del clúster a través de NodeIP y NodePort
 |**LoadBalancer**| Se puede acceder al servicio desde fuera del clúster a través de un equilibrador de carga externo. Puede ingresar a la aplicación.
 
-En nuestro caso vamos a utilizar LoadBalancer para la aplicación CRUD, ya que necesitamos acceder desde el exterior y el servicio de mongodb será ClusterIP, porque este solo tiene que poder tener acceso a la aplicación CRUD dentro del cluster.
 
-Modificamos el fichero `service.yaml` para indicarle los valores de tipo de servicio, puerto externo, etc.
+En este caso, se va a utilizar LoadBalancer para la aplicación CRUD, ya que se necesita acceder desde el exterior, y el servicio de mongodb será ClusterIP porque éste solo tiene que poder tener acceso a la aplicación CRUD dentro del cluster.
+
+Se modifica el fichero `service.yaml` para indicarle los valores de tipo de servicio, puerto externo, etc.
 
 ```yaml
 spec:
@@ -738,7 +715,7 @@ service:
   protocol: TCP
 ```
 
-Añadimos algunas label, para tener un control y una comodidad a la hora de listar y trabajar con los objetos que vamos a crear.
+Se añadimen algunas label, para tener más control y comodidad al listar y trabajar con los objetos que se van a crear.
 
 ```yaml
 labels:
@@ -750,10 +727,9 @@ labels:
 
 #### Fichero values.yaml
 
-Definir la mayoría de nuestras configuraciones en el fichero `values.yaml` es una práctica para ayudar a mantener los chart Helm en un buen estado de mantenimiento, además de ser mas fácil cambiar a otra configuración.
+Una buena práctica es definir la mayoría de la configuración en el fichero `values.yaml` para ayudar a mantener los chart Helm en un buen estado de mantenimiento, además de ser más fácil si se cambia a otra configuración.
 
-Vamos a ver como ha quedado el fichero `values.yaml`.
-
+El contenido del fichero `values.yaml` quedaría de la siguiente forma:
 ```yaml
 # Default values for app-crud.
 # This is a YAML-formatted file.
@@ -837,13 +813,15 @@ tolerations: []
 affinity: {}
 ```
 
-Al tener todo configurado, solo nos faltará instalar el chart pero antes examinaremos el chart para detectar posibles problemas con el comando `helm lint`
+Con todo configurado, solo falta instalar el chart. Pero antes se examina éste para detectar posibles problemas con el comando `helm lint`.
 
 > #### ESTRUCTURA DEL COMANDO
 > --------------------
 > * **`helm lint PATH [flags]`**
 > 
-> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_lint/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+>> ###### [Para saber más sobre los comandos de helm](https://helm.sh/docs/helm/helm_lint/) o utilice `helm help` para una descripción general o utilice el parámetro `-h` para una descripción de un comando concreto
+
+> ###### Más información sobre el comando lint en la [página oficial de Helm]](https://helm.sh/docs/helm/helm_lint/) o con el comando `helm help` para una descripción general y con el parámetro `-h` para una descripción del comando concreto.
 
 
 ***debian@cliente:**~/app-crud* **$** `helm lint ./`
@@ -853,9 +831,9 @@ Al tener todo configurado, solo nos faltará instalar el chart pero antes examin
 1 chart(s) linted, 0 chart(s) failed
 ```
 
-Cuando nos muestre el mensaje con 0 fallos, podemos realizar la instalación.
+Cuando se muestre el mensaje que indica que hat cero fallos se puede iniciar la instalación.
 
-Es posible que salgan algunos fallitos referidos a la `apiVersion`, ya que dependiendo de que versión de helm utilices y dependiendo de la dependencia que elijas puede variar.
+Es posible que algunos fallos estén relacionados con la `apiVersion`, ya que dependiendo de la version de helm las versiones de las dependencias pueden varias.
 
 > #### NOTA
 > --------------------------
@@ -864,11 +842,12 @@ Es posible que salgan algunos fallitos referidos a la `apiVersion`, ya que depen
 > Chart.yaml: dependencies are not valid in the Chart file with apiVersion 'v1'. They are valid in apiVersion 'v2'`
 > ~~~
 >
-> Para arreglar este error tan solo deberiamos de cambiar en el fichero `Chart.yaml` la version del campo `apiVersion` a `v2`.
+> Para arreglar este error hay que cambiar la versión del campo `apiVersion` a `v2` en el dichero `Chart.yaml`.
 
 > #### NOTA
 > --------------------------
-> Recordad añadir un Persistent Volume, para que el Persistent Volume Claim se enlace. Dejo un fichero de configuración de un PV.
+
+> Para la dependencia, base de datos MongoDB, es necesario crea un Persistent Volume para guardar los datos. Es por eso que en uno de los ficheros `.yaml` crea un Persistem Volume Claim. A continuación, un ejemplo del fichero de creación de un PV:  
 > ```yaml
 > apiVersion: v1
 > kind: PersistentVolume
@@ -886,10 +865,9 @@ Es posible que salgan algunos fallitos referidos a la `apiVersion`, ya que depen
 >     path: "/mnt/data"
 > ```
 
-Ahora si, vamos a realizar la instalación del chart, con el mismo comando que vimos anteriormente en la la guia rápida, `helm install`, este se encargara de desplegar los ficheros YAML de los objetos de Kubernetes inyectandole los valores que le hemos indicado en el fichero ``values.yaml``.
+Por último, se va a realizar la instalación del chart, con el mismo comando que se usó en la guía rápida, `helm install`. Este comando se encarga de desplegar todos los ficheros `.yaml` de los objetos de Kubernetes inyectándole los valores que se han indicado en el dichero `values.yaml`.
 
 ***debian@cliente:**~/app-crud* **$** `helm install app-crud ./`
-
 ~~~
 NAME: app-crud
 LAST DEPLOYED: Mon Nov 30 12:50:21 2020
@@ -907,7 +885,7 @@ NOTES:
 
 > #### NOTA
 > --------------------
-> Este mensaje que nos muestra lo podemos nosotros modificar editando el fichero `template/NOTES.txt`. Para tener el ejemplo, os dejo aquí el contenido que yo he utilizado:
+> El mensaje que muestra se puede modificar editando el fichero `template/NOTES.txt`. Un ejemplo del contenido que se ha usado en esta configuración:
 > ~~~~
 > 1. Get the application URL by running these commands:
 > {{- if .Values.ingress.enabled }}
@@ -930,19 +908,17 @@ NOTES:
 > {{- end }}
 > ~~~~
 
-Como podemos ver, se ha instalado con exito y lo podemos listar con `helm list`.
+La instalación se ha realizado con éxito y se puede comprobar con `helm list`.
 
 ***debian@cliente:**~/app-crud* **$** `helm list`
-
 ~~~
 NAME            NAMESPACE       REVISION        UPDATED                                 STATUS          CHART                APP VERSION
 app-crud        default         1               2020-11-30 12:50:21.429099337 +0000 UTC deployed        express-crud-0.1.0   1.0.1
 ~~~
 
-Y podemos ver con el comando `kubectl get all` que se han creado los objetos que hemos ido editando en esta práctica:
+Para ver los objetos que se han creado se ejecuta `kubectl get all`:
 
 ***debian@cliente:**~/app-crud* **$** `kubectl get all`
-
 ~~~
 NAME                                         READY   STATUS    RESTARTS   AGE
 pod/app-crud-express-crud-565b97d46d-knwkh   1/1     Running   0          5m12s
@@ -962,7 +938,7 @@ replicaset.apps/app-crud-express-crud-565b97d46d   1         1         1       5
 replicaset.apps/app-crud-mongodb-5cc7c8c7d7        1         1         1       5m12s
 ~~~
 
-Para acceder a nuestra aplicación utilizaremos el puerto externo del servicio de Loadbalancer.
+A través del puerto externo del servicio de Loadbalancer se accede a la aplicación.
 
 ![appCRUD](image/appCRUD.png)
 
@@ -972,12 +948,11 @@ Para acceder a nuestra aplicación utilizaremos el puerto externo del servicio d
 
 -----------------------
 
-Dos de los grandes beneficiones que obtenemos al utilizar Helm es poder modificar nuestro chart y actualizarlo de forma muy sencilla con el comando `helm upgrade` y la otra utilidad que vamos a ver a continuación es volver a un estado de la aplicación anterior, es decir, realizar un rollback a la version del chart que queramos con el comando `helm rollback`.
+Dos grandes beneficios que se obtienen al utilizar Helm es poder modificar el chart y actualizarlo de forma muy sencilla con el comando `helm upgrade` y volver a un estado de la aplicación anterior, es decir, realizar un rollback a la versión del chart que queramos con el comando `helm rollback`. A continuación, se explicará esta última utilidad.
 
+### Actualizar el chart
 
-### Actualización de nuestro chart
-
-Supongamos que queremos modificar nuestra aplicación y aumentar las réplicas. Para esto vamos a editar el fichero `values.yaml` y cambiamos el valor `replicaCount`.
+Se va a realizar una modificación en la aplicación, aumentar las réplicas. Para ello se edita el valor de `replicaCount` en el fichero `values.yaml`.
 
 ###### Antes
 ````yaml
@@ -987,9 +962,10 @@ replicaCount: 1
 ````yaml
 replicaCount: 2
 ````
-Y ejecutamos el comando `helm update`, esto hará que actualice a una versión nueva del chart.
 
-Podemos ver que la versión del chart es 1.
+Para que se realicen los cambios, creándose una versión nueva del chart, se ejecuta el comando `helm update`.
+
+Antes deactualizar la versión del chart es 1:
 
 ***debian@cliente:**~/app-crud* **$** `helm list`
 ~~~~
@@ -997,7 +973,7 @@ NAME      NAMESPACE       REVISION        UPDATED                               
 app-crud  default         1               2020-12-04 13:54:08.201085786 +0000 UTC deployed        app-crud-0.1.0  1.0.1
 ~~~~
 
-Y si actualizamos:
+Y al actualizar se muestra un mensaje indicando que la versión del chart se ha actualizado:
 
 ***debian@cliente:**~/app-crud* **$** `helm upgrade app-crud ./`
 ~~~~
@@ -1017,22 +993,20 @@ NOTES:
   echo http://$SERVICE_IP:80
 ~~~~
 
-Nos muestra un mensaje que el chart se ha actualizado, como podemos comprobarlo listando los chart.
-
 ***debian@cliente:**~/app-crud* **$** `helm list`
 ~~~~
 NAME      NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
 app-crud  default         2               2020-12-04 13:57:45.495586135 +0000 UTC deployed        app-crud-0.1.0  1.0.1
 ~~~~
 
-Podemos comprobar también que se ha realizado el cambio con el comando `helm get values`.
+También se puede comprobar el cambio con el comando `helm get values`.
 
 ***debian@cliente:**~/app-crud* **$** `helm get values --all app-crud | egrep replica`
 ````yaml
 replicaCount: 2
 ````
 
-Además si listamos los objetos pod que hay en el cluster de kubernetes, vermos que se esta creando un nuevo pod.
+Además, se ha creado el nuevo pod. Se comprueba listando los objetos pod que hay en el cluster:
 
 ***debian@cliente:**~/app-crud* **$** `kubectl get pod`
 ~~~~
@@ -1045,11 +1019,9 @@ app-crud-mongodb-5bc9679bcc-vk6qh        1/1     Running           0          3m
 
 ### Realizar un Rollback a una version anterior del chart
 
-Ya hemos actualizado nuestro chart y tenemos dos pod corriendo gracias a que hemos aumentado 2 el valor de la replica pero imaginaros que la aplicación entra en estado de error y queremos volver a la version anterior del chart.
+A continuación, se va a explicar como volver a una versión anterior del chart. En esta práctica, de la versión 2, donde la aplicación contiene dos pods replicados, a la versión 1. Para ello se hace uso del comando `helm upgrade` seguido de dos argumentos. El primero de ellos será el nombre de una versión y el segundo es un número de revisión
 
-Ejecutamos el comando `helm upgrade`, este comando revierte una versión (en nuestro caso la versión 2) a una versión anterior (queremos volver a la versión 1). El primer argumento del comando de rollback es el nombre de una versión y el segundo es un número de revisión (versión). Si se omite este argumento, se revertirá a la versión anterior.
-
-Para ver los números de revisión, ejecutamos el comando `helm history`
+Para ver los números de revisión, se ejecuta el comando `helm history`
 
 ***debian@cliente:**~/app-crud* **$** `helm history app-crud`
 ~~~~
@@ -1058,14 +1030,14 @@ REVISION        UPDATED                         STATUS          CHART           
 2               Fri Dec  4 13:57:45 2020        deployed        app-crud-0.1.0  1.0.1           Upgrade complete
 ~~~~
 
-Queremos volver a la revisión 1:
+Se vuelve a la revisión 1:
 
 ***debian@cliente:**~/app-crud* **$** `helm rollback prueba 1`
 ~~~~
 Rollback was a success! Happy Helming!
 ~~~~
 
-Y si listamos las revisiones de nuevo:
+Y al listar las revisiones de nuevo:
 
 ***debian@cliente:**~/app-crud* **$** `helm history app-crud`
 ~~~~
@@ -1075,14 +1047,14 @@ REVISION        UPDATED                         STATUS          CHART           
 3               Fri Dec  4 14:06:43 2020        deployed        app-crud-0.1.0  1.0.1           Rollback to 1
 ~~~~
 
-Mostramos el valor del atributo replica:
+Mostrar el valor del atributo réplica:
 
 ***debian@cliente:**~/app-crud* **$** `helm get values --all app-crud | egrep replica`
 ````yaml
 replicaCount: 1
 ````
 
-Y por útltimo, podemos ver que esta pod nuevo esta en estado `Terminating`
+Además, se observa que el nuevo pod está en estado `Terminating`.
 
 ***debian@cliente:**~/app-crud* **$** `kubectl get pod`
 ~~~~
@@ -1096,15 +1068,15 @@ app-crud-mongodb-5bc9679bcc-vk6qh        1/1     Running           0          12
 
 ### Despliegue de Chart de aplicación PHP utilizando Laravel y MySQL
 
-Vamos a desplegar una nueva aplicación PHP de Laravel 7 (es un frameworks de aplicaciones PHP de código abierto mas populares). Este lo vamos a implementar con una vase de datos MySQL con ayuda del chart oficial `stable/lamp`.
+Se va desplegar una nueva aplicación PHP de Larabel 7, frameworks de aplicaciones PHP de código abierto. Implementado con una base de datos MySQL con la ayuda del chart oficial `stable/lamp`.
 
-Para el despliegue de esta aplicación vamos a utilizar una imagen docker `moralg/larabel-kubernetes`, la cual he creado con docker compose y subido a mi repositorio de [Docker Hub](https://hub.docker.com/repository/docker/moralg/laravel-kubernetes) para utilizarla esta práctica.
+Para el despliegue de esta aplicación se va a utilizar una imagen docker propia, `moralg/larabel-kubernetes`, creada con docker compose y subida al repositorio [DockerHub/moralg](https://hub.docker.com/repository/docker/moralg/laravel-kubernetes).
 
 > #### NOTA
 > ----------------------
-> La aplicación de larabel la he cogido prestada del repositorio oficial de Larabel en [Github](https://github.com/laravel/laravel).
+> La aplicación de larabel se ha construido con ayuda del repositorio oficial de Larabel en [Github](https://github.com/laravel/laravel).
 
-Antes de realizar la instalación del chart, he añadido una pequeña modificación al fichero `larabel/resources/views/welcome.blade.php`
+Antes de realizar la construcción de la imagen, se ha añadido una modificación al fichero `larabel/resources/views/welcome.blade.php`, para probar la conexión de la base de datos y mostrar el nombre si realiza la conexión.
 
 ````html
 <div class="links">
@@ -1120,9 +1092,7 @@ Antes de realizar la instalación del chart, he añadido una pequeña modificaci
 </div>
 ````
 
-Este pequeño fragmento de código lo que hace es probar la conexión de la base de datos y muestrará el nombre si realiza la conexión.
-
-También te dejo aquí el código del docker compose para tenerlo presente a la hora de crear los fichero necesarios para el despliegue de nuestro chart.
+Para conocer las variables que más tarde se utilizarán para la creación de los ficheros `values.yaml`, datos no confidenciales, y `secrets.yaml`, datos confidenciales, es importante el código del docker compose con el que se ha realizado la imagen, que es el siguiente:
 
 ````yaml
 version: '3.5'
@@ -1151,17 +1121,13 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
 ````
 
-Como podemos ver, en el fichero del docker compose, le indicamos las variables de entorno que vamos a añadir a nuestro fichero values.yaml (en este fichero los datos no confidenciales) y en el secrets.yaml (los datos confidenciales).
-
 > #### NOTA
 > ----------------------
-> Además hay que tener en cuenta que el chart ofcial que vamos a utilizar tiene una serie de valores que podemos modificar. 
+> Además hay que tener en cuenta que el chart ofcial que se va a utilizar tiene una serie de valores que se pueden modificar. 
 > 
-> Te dejo el repositorio de Github de para que puedas mirar los valores. [stable/lamp](https://github.com/helm/charts/tree/master/stable/lamp)
+> En el repositorio de GitHub [stable/lamp](https://github.com/helm/charts/tree/master/stable/lamp) se pueden mirar los valores configurables.
 
-Ya que tenemos todo claro podemos comenzar a crear nuestros dos ficheros, los unicos que nos hace falta para desplegar una aplicación con Helm.
-
-Creamos el fichero `values.yaml` y añadimos el siguiente código.
+Se crea el fichero `values.yaml` con el siguiente código donde se han añadido los valores `repository` y `tag`, para indicar la imagen de docker de la aplicación Larabel. También se han indicado las variables de entorno no confidenciales.
 
 ````yaml
 php:
@@ -1178,10 +1144,8 @@ php:
     - name: DB_HOST
       value: localhost
 ````
-En el fichero `values.yaml` hemos añadido los valores de ``repositorio`` y la `tag` para indicar la imagen de docker de la aplicación Larabel.
-Tabién hemos indicado las variables de entorno no confidenciales, modificadas a nuestro a nuestras necesidades.
 
-Creamos el fichero `secrets.yaml` y añadimos el siguiente código.
+Se crea el fichero `secrets.yaml` con el siguiente código donde se han añadido las variables confidenciales de la base de datos MySQL y, con los mismos valores, a la aplicación php, para que tenga acceso a MySQL.
 
 ````yaml
 mysql:
@@ -1202,9 +1166,7 @@ php:
       value: "bd_pass"
 ````
 
-En el fichero `secrets.yaml` hemos añadido las variables confidenciales de la base de datos, y con los mismos valores se la hemos asignado a las variables confidenciales de nuestra aplicación php, para que tenga acceso a MySQL. 
-
-Una vez que tengamos creado estos dos ficheros vamos a instalar el chart con el comando `helm install` y añadiendo el parámetro `-f` para indicar los ficheros, además de el chart oficial `stable/lamp`
+Creado los dos ficheros se instala el chart con el comando `helm install` y añadiendo el parámetro `-f` para indicar los ficheros, además de el chart oficial `stable/lamp`
 
 ***debian@cliente:**~/app-larabel* **$** `helm install laravel-kubernetes -f values.yaml -f secrets.yaml stable/lamp`
 ~~~~
@@ -1233,7 +1195,7 @@ LOADBALANCER:
 
 > #### NOTA
 > ----------------------
-> Es necesario crear un Volume Persistent, dejo un fichero YAML del objeto para crearlo:
+> Para la base de datos MySQL, es necesario crea un Persistent Volume para guardar los datos. A continuación, un ejemplo del fichero de creación de un PV:  
 > ````yaml
 > apiVersion: v1
 > kind: PersistentVolume
@@ -1249,11 +1211,11 @@ LOADBALANCER:
 >   hostPath:
 >     path: "/mnt"
 > ````
-> Y ejecutamos lo siguiente:
+> Y se ejecuta lo siguiente:
 > 
 > ***debian@cliente:**~* **$** `kubectl app install laravel-kubernetes -f values.yaml -f secrets.yaml stable/lamp`
 
-Podemos ver que todo esta funcionando como en la práctica anterior, listando todos los objetos:
+Las comprobaciones se realizan como en la práctica anterior, listando los objetos del cluster de Kubernetes:
 
 ***debian@cliente:**~* **$** `kubectl get all`
 ~~~~
@@ -1271,7 +1233,7 @@ NAME                                      DESIRED   CURRENT   READY   AGE
 replicaset.apps/laravel-lamp-68dffb6495   1         1         1       48m
 ~~~~
 
-Y para acceder a nuestra aplicación desde http, tenemos que poner en el navegador la ip del servidor y el puerto externo asignado al httpd, en este caso el **32418**.
+Para acceder a la aplicación desde http, se utiliza la ip del servidor y el puerto externo asignado al httpd, en este caso el **32418**.
 
 ![app-larabel](image/app-larabel.png)
 
@@ -1279,15 +1241,15 @@ Y para acceder a nuestra aplicación desde http, tenemos que poner en el navegad
 
 ### Creación de un repositorio público
 
-Podemos alojar y compartir chart de Helm a través de un repositorio de Helm, que es efectivamente un sitio web estático con un fichero `index.yaml`, compuesto de metadatos y enlaces a los chart de Helm.
+Se pueden compartir charts de Helm a través de un repositorio público. Alojando los chart, gestionados por un fichero `index.yaml` para las diferentes releases, compuesto de metadatos y enlaces a los chart de Helm.
 
-Esto hace que se pueda alojar un repositorio en Github Pages, S3 de AWS, Almacenamiento en la nube de Google, etc. En esta práctica vamos a utilizar Github Pages, ya que tenemos el repositorio (Github) y el sitio web (Github Pages) en el mismo lugar.
+De esta forma se puede utlizar Github Pages, S3 de AWS, Almacenamiento en la nube de Google, etc. En esta práctica se va a utilizar Github Pages.
 
-Empezamos creando un repositorio en Github, yo lo llamaré [Public_repository_helm](https://github.com/MoralG/Public_repository_helm/tree/repo-helm).
+Se crea un repositorio en Github, [Public_repository_helm](https://github.com/MoralG/Public_repository_helm/tree/repo-helm).
 
 ![Create_repository](image/Create_repository.png)
 
-Clonamos el repositorio en nuestro equipo:
+Se clona el repositorio en nuestro equipo:
 
 ***debian@cliente:**~* **$** `git clone git@github.com:MoralG/Public_repository_helm.git`
 ~~~~
@@ -1299,7 +1261,7 @@ remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
 Receiving objects: 100% (3/3), done.
 ~~~~
 
-El sigueinte paso es añadir algunos charts de Helm, vamos a utilizar los chart que se crean por defecto al utilizar `helm create` para realizar la práctica mas rápido.
+El siguiente paso es añadir algunos charts de Helm. Se va a utilizar los chart que se crean por defecto al utilizar `helm create`.
 
 ***debian@cliente:**~/Public_repository_helm* **$** `mkdir charts`
 
@@ -1344,16 +1306,14 @@ Creating chart2
 8 directories, 20 files
 ~~~~
 
-Ahora vamos a preparar Github Pages, tenemos que habilitarlas en el repositorio git y también vamos a crear una rama vacía, la llamaremos `repo-helm`.
-
-Creamos la rama vacia así:
+Se va crear una rama vacía, `repo-helm`:
 
 ***debian@cliente:**~/Public_repository_helm* **$** `git checkout --orphan repo-helm`
 ~~~~
 Switched to a new branch 'repo-helm'
 ~~~~
 
-Añadimos a la rama `repo-helm` los charts: 
+Se añade a la rama `repo-helm` los charts: 
 
 ***debian@cliente:**~/Public_repository_helm* **$** `git add *`
 
@@ -1416,27 +1376,27 @@ To github.com:MoralG/Public_repository_helm.git
  * [new branch]      repo-helm -> repo-helm
 ~~~~
 
-Ahora habilitamos Github Pages en los ajustes de nuestro repositorio. La dirección es `Settings > Options > GitHub Pages`.
+Y se habilita Github Pages en los ajustes del repositorio. La dirección es `Settings > Options > GitHub Pages`.
 
-Le indicamos la rama `repo-helm`, el directorio raíz `/(root)` y le damos a guardar `Save`.
+Se indica la rama `repo-helm`, el directorio raíz, `/(root)`.
 
 ![github-pages](image/github-pages.png)
 
-Esperamos unos segundos y podremos acceder a la URL que nos proporciona Github Pages.
+Tras unos segundos, ya se podrá acceder a la URL que nos proporciona Github Pages.
 
 ![github-pages-web](image/github-pages-web.png)
 
-Podemos utilizar un combinación de los comandos `helm package` y `helm repo` para construir nuestro repositorio de Helm a mano, o podemos utilizar `chart-releaser` que además de crear nuestros paquetes, nos los cargará como binarios, en una versión de Github, con la versión adecuada.
+Se puede utilizar un combinación de los comandos `helm package` y `helm repo` para construir el repositorio de Helm a mano, o se puede utilizar `chart-releaser` que, además de crear los paquetes, éstos se cargaran como binarios en una release de Github, con la versión adecuada.
 
-Nos descargaremos la última versión de `chart-releaser` desde el repositorio de [Helm en Github](https://github.com/helm/chart-releaser/releases) y descomprimimos el fichero con `tar`.
+Se descarga la última versión de `chart-releaser` desde el repositorio de [Helm en Github](https://github.com/helm/chart-releaser/releases) y se descomprime el fichero con el comando `tar`.
 
 ***debian@cliente:**/tmp* **$** `curl -sSL https://github.com/helm/chart-releaser/releases/download/v0.2.1/chart-releaser_0.2.1_linux_amd64.tar.gz | tar xzf -`
 
-Movemos el del binario a `/bin/cr`
+Se mueve el del binario al directorio  `/bin/cr`
 
 ***debian@cliente:**/tmp* **$** `sudo mv cr /bin/cr`
 
-Comprobamos que esta instalado y la versión:
+Se comprueba que está instalado y la versión:
 
 ***debian@cliente:**~* **$** `cr version`
 ~~~~
@@ -1446,17 +1406,15 @@ Date:            2019-05-23T06:19:20Z
 License:         Apache 2.0
 ~~~~
 
-Hay dos comandos que nos interesan, `cr index` (creará un fichero `index.yaml`) y `cr upload` (cargará los paquetes a las versiones de Github). Para esto último, necesitamos un token de Github para que pueda utilizar la API.
+Dos comando importantes: `cr index` (creará un fichero `index.yaml`) y `cr upload` (cargará los paquetes a las release de Github). Para esto último, se necesita un token de Github para que pueda utilizar la API.
 
-La dirección para crear un token es: `Settins - Developer settings - Personal access tokens`. Seleccionamos `Generate new token` y le asignamos un nombre y marcamos los ámbitos: `repo`, `workflow`, `write:packages`, `delete:packages`.
+La dirección para crear un token es: `Settins > Developer settings > Personal access tokens > Generate new token`, se asigna un nombre y se marcan los ámbitos: `repo`, `workflow`, `write:packages`, `delete:packages`.
 
-Creamos una variable de entorno con el token de acceso.
+Se crea una variable de entorno con el token de acceso.
 
 ***debian@cliente:**~* **$** ` export CR_TOKEN=b67e55c97bcaa440d75de4258a2e79b551101c5f`
 
-Nuestro siguiente paso es crear y cargar los paquetes, para esto vamos a utilizar el comndo `helm package`
-
-Tenemos que crear un directorio para los paquetes que vamos a cargar, además de añadirlo al fichero `.gitignore` para que no se suba a nuestro repositorio.
+El siguiente paso será crear y cargar los paquetes, para esto se utiliza el comndo `helm package`. Hay que crear un directorio para los paquetes que se van a cargar, además de añadir este directorio al fichero `.gitignore` para que no se suba al repositorio.
 
 ***debian@cliente:**~/Public_repository_helm* **$** `echo ".deploy" >> .gitignore`
 
@@ -1466,33 +1424,34 @@ Successfully packaged chart and saved it to: .deploy/chart1-0.1.0.tgz
 Successfully packaged chart and saved it to: .deploy/chart2-0.1.0.tgz
 ~~~~
 
-Podemos ver que se ha creado dos paquetes, el nombre se ha generado con la versión que tenemos asignada en el fichero `Chart.yaml`, esta versión también será la misma que la del `tag` de la release de Github.
+Se obseva que se han creado dos paquetes. El nombre de los paquetes se ha generado con la versión que tenemos asignada en el fichero `Chart.yaml`, esta versión también será la misma que la del `tag` de la release de Github.
 
 ***debian@cliente:**~/Public_repository_helm* **$** `ls .deploy/`
 ~~~~
 chart1-0.1.0.tgz  chart2-0.1.0.tgz
 ~~~~
 
-Ejecutamos `cr upload` para crear versiones y cargar los paquetes.
+Se ejecuta `cr upload` para crear versiones y cargar los paquetes.
 
 ***debian@cliente:**~/Public_repository_helm* **$** `cr upload -o moralg -r Public_repository_helm -p .deploy -t <<<TOKEN>>>`
 
-Con este comando le indicamos el propietario del repositorio `-o`, el nombre del repositorio `-r` el directorio donde se almacenan los paquetes `-p` y el token de acceso `-t`.
+Con este comando se indica el propietario del repositorio, `-o`, el nombre del repositorio, `-r`, el directorio donde se almacenan los paquetes, `-p`, y el token de acceso `-t`.
 
-Al ejecutar el comando, no nos devuelve ninguna salida. Si todo ha salido bien, tendremos en nuestro repositorio dos release.
+Al ejecutar el comando, no devuelve ninguna salida. Si todo ha salido bien, el repositorio tendrá dos release.
 
 ![release](image/release.png)
 
-Continuamos con la creación del fichero `index.yaml` y posteriormente subirlo 
+Se continua con la creación del fichero `index.yaml` para posteriormente subirlo. 
 
-Seleccionamos la rama `repo-helm`
+Se selecciona la rama `repo-helm`:
 
 ***debian@cliente:**~/Public_repository_helm* **$** `git checkout repo-helm`
 ~~~~
 Already on 'repo-helm'
 ~~~~
 
-Creamos el fichero `index.yaml` añadiendo los datos del propietario y del repositorio.
+Se crea el fichero `index.yaml` añadiendo los datos del propietario y del repositorio.
+
 ***debian@cliente:**~/Public_repository_helm* **$** `cr index -i ./index.yaml -p .deploy -o moralg -r Public_repository_helm`
 ~~~~
 ====> UpdateIndexFile new index at ./index.yaml
@@ -1505,7 +1464,7 @@ Creamos el fichero `index.yaml` añadiendo los datos del propietario y del repos
 --> Updating index ./index.yaml
 ~~~~
 
-Ahora tendríamos que tener un fichero `index.yaml` creado con los detalles de los charts y la ruta de sus ficheros.
+El comando anterior crea el fichero `index.yaml` y el contenido automáticamente con los detalles de los charts y la ruta de sus ficheros.
 
 ~~~~
 apiVersion: v1
@@ -1533,18 +1492,20 @@ entries:
 generated: "2020-12-07T14:20:14.977062307Z"
 ~~~~
 
-Subimos el fichero `index.yaml` a nuestro repositorio y comprobamos que existe en Github Pages.
+Se sube el fichero `index.yaml` al repositorio y se comprueba que existe en Github Pages.
 
 ![release_web](image/release_web.png)
 
-Vamos a probar nuestro nuevo repositorio. Añadimos el repositorio con el comando `helm repo add` y utilizando el nombre de nuestro repositorio y la dirección de Github Pages.
+Comprobación del nuevo repositorio: 
+
+Se añade el repositorio con el comando `helm repo add` y se utiliza el nombre de nuestro repositorio y la dirección de Github Pages.
 
 ***debian@cliente:**~* **$** `helm repo add public_repository_helm https://moralg.github.io/Public_repository_helm/`
 ~~~~
 "public_repository_helm" has been added to your repositories
 ~~~~
 
-Lo listamos para asegurarnos que esta añadido:
+Se lista los repositorios:
 
 ***debian@cliente:**~* **$** `helm repo list`
 ~~~~
@@ -1555,7 +1516,7 @@ stable                  https://charts.helm.sh/stable
 public_repository_helm  https://moralg.github.io/Public_repository_helm/
 ~~~~
 
-Ya tenemos nuestro repositorio creado y añadido a nuestro Helm, lo último que podemos hacer es instalar uno de los chart que hemos añadido a nuestro repositorio.
+El repositorio se ha creado y se ha añadido a Helm. Lo último es instalar uno de los chart que se ha añadido al repositorio.
 
 ***debian@cliente:**~* **$** `helm install test public_repository_helm/chart1`
 
@@ -1580,15 +1541,16 @@ test-chart1-7979df9f94-nv5kk       1/1     Running   0          97s
 
 ## Siguientes Pasos
 
-Los siguientes pasos que se podrían realizar para ampliar esta práctica sería la utilización de Helmfile.
+Los siguientes pasos que se podrían realizar para ampliar esta práctica sería la utilización de Helmfile. Esta herramienta permite declarar una definición de un cluster de Kubernetes completo en un solo fichero YAML, agrupar múltiples versiones de Helm, instalación de chart de Helm, y permite ajustar una especificación de cada versión en función del tipo de entorno que se necesite (desarrolo, prueba, producción).
 
-Helmfile permite declarar una definición de un cluster de Kubernetes completo en un solo fichero YAML, agrupa múltiples versiones de Helm (instalación de chart de Helm) y permite ajustar una especificación de cada versión en función de un tipo de entorno (desarrolo, prueba, producción) en el que es posible que desee implementar sus aplicaciones.
-
-También podríamos automatizar las actualizaciones de los chart de Helm para nuestro repositorio con [CicleCI](https://circleci.com/). Es un servicio de integración continua muy utilizado por la comunidad de Helm.
+También se podría automatizar las actualizaciones de los chart de Helm para nuestro repositorio con [CicleCI](https://circleci.com/). Es un servicio de integración continua muy utilizado por la comunidad de Helm.
 
 ## Conclusiones
 
-Después de haber trabajado con Helm, a la conclusión que he llegado, es que al principio cuesta un poco comprender la integración de los objetos de Kubernetes con la sintaxis de Go para crear variables y tener todos los valores en el fichero `values.yaml`, pero una vez controlado, el proceso de gestionar una aplicación en charts a través de helm es mas cómodo. A la hora de realizar un cambio y actualizar la versión, como también lo sencillo que podemos revertir cualquier fallo o configuración no deseada con rollback.
+Una vez controlado las partes del código, escritos en Go, de los ficheros YAML, donde se indican las variables que utlizará el fichero `values.yaml`, el proceso de gestionar una aplicación en charts a través de Helm es más cómodo para realizar un cambio y actualizar la versión. También es más sencillo revertir cualquier fallo o configuración no deseada con rollback.
+
+Además, Helm y su comunidad está muy implicada en el desarrolo de creación de chart para la utilización pública.
+
 
 ## Webgrafía
 
