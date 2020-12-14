@@ -262,8 +262,14 @@ Para ver los chart lanzados con Helm se utiliza el comando `helm ls`.
 
 ***debian@cliente:**~* **$** `helm ls`
 ~~~
-NAME 	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART      	APP     VERSION
-maria	default  	1       	2020-04-23 17:39:05.877933281 +0000 UTC	deployed	mysql-1.6.3	5.7.28
+NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+maria   default         1               2020-12-14 13:39:08.054579077 +0000 UTC deployed        mysql-1.6.9     5.7.30
+~~~
+
+***debian@cliente:**~* **$** `helm history maria`
+~~~
+REVISION        UPDATED                         STATUS          CHART           APP VERSION     DESCRIPTION
+1               Mon Dec 14 13:39:08 2020        deployed        mysql-1.6.9     5.7.30          Install complete
 ~~~
 
 ### Actualización de una versión
@@ -287,8 +293,9 @@ mariadbUser: usuario1
 
 ***debian@cliente:**~* **$** `helm history maria`
 ~~~
-REVISION	UPDATED                 	STATUS     	CHART         	APP VERSION	DESCRIPTION
-1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
+REVISION        UPDATED                         STATUS          CHART           APP VERSION     DESCRIPTION
+1               Mon Dec 14 13:39:08 2020        superseded      mysql-1.6.9     5.7.30          Install complete
+2               Mon Dec 14 13:41:48 2020        deployed        mariadb-7.3.14  10.3.22         Upgrade complete
 ~~~
 
 ### Desinstalación de una versión
@@ -302,7 +309,7 @@ Para desinstalar una versión hay que utilizar el comando `helm uninstall`.
 > 
 > ###### Más información sobre el comando uninstall en la [página oficial de Helm]](https://helm.sh/docs/helm/helm_plugin_uninstall/) o con el comando `helm help` para una descripción general y con el parámetro `-h` para una descripción del comando concreto.
 
-Se va a desinstalar el chart **maria** con la opción `--feep-history` para mantener el historial de versión.
+Se va a desinstalar el chart **maria** con la opción `--keep-history` para mantener el historial de versión.
 
 ***debian@cliente:**~* **$** `helm uninstall maria --keep-history`
 ~~~
@@ -323,6 +330,13 @@ STATUS: uninstalled
 .
 .
 .
+~~~
+
+***debian@cliente:**~* **$** `helm history maria`
+~~~
+REVISION        UPDATED                         STATUS          CHART           APP VERSION     DESCRIPTION
+1               Mon Dec 14 13:46:39 2020        superseded      mysql-1.6.9     5.7.30          Install complete
+2               Mon Dec 14 13:46:51 2020        uninstalled     mariadb-7.3.14  10.3.22         Uninstallation complete
 ~~~
 
 ### Rollback
@@ -351,24 +365,30 @@ Conociendo la revisión a la que se quiere revertir se realiza el **rollback**:
 Rollback was a success! Happy Helming!
 ~~~
 
-A continuación, se listan los chart para comprobar que se ha realizado correctamente:
+A continuación, se listan los chart para comprobar que se ha realizado correctamente y aparecerá el chart **maria** con la revisión número 3 y el estado `deployed`.
 
 ***debian@cliente:**~* **$** `helm ls`
 ~~~
-NAME 	NAMESPACE	REVISION	UPDATED                               	STATUS  	CHART      	APP     VERSION
-maria	default  	2       	2020-04-23 17:51:41.84658262 +0000 UTC	deployed	mysql-1.6.3	5.7.    28
+NAME    NAMESPACE       REVISION        UPDATED                                 STATUS          CHART           APP VERSION
+maria   default         3               2020-12-14 13:49:02.837582826 +0000 UTC deployed        mysql-1.6.9     5.7.30
 ~~~
 
-El chart **maria** aparece de nuevo pero con la revisión número 2.
-
-Ahora, con `helm history` aparece la revisión 1 desinstalada y la revisión 2 lanzada.
+Ahora, con `helm history` aparece las tres revisiones, la de la instalación, la de la actualización pero que se ha desinstalado y por último el rollback de la revision 1, esta última es la que esta desplegada.
 
 ***debian@cliente:**~* **$** `helm history maria`
 ~~~
-REVISION	UPDATED                 	STATUS     	CHART      	APP VERSION	DESCRIPTION
-1       	Thu Apr 23 16:30:03 2020	deployed   	mysql-1.6.3   	5.7.28    	Upgrade complete
-2       	Thu Apr 23 17:39:05 2020	uninstalled	mysql-1.6.3	    5.7.28     	Uninstallation complete
-3       	Thu Apr 23 17:51:41 2020	deployed	mysql-1.6.3	    5.7.28     	Uninstallation complete
+REVISION        UPDATED                         STATUS          CHART           APP VERSION     DESCRIPTION
+1               Mon Dec 14 13:46:39 2020        superseded      mysql-1.6.9     5.7.30          Install complete
+2               Mon Dec 14 13:46:51 2020        uninstalled     mariadb-7.3.14  10.3.22         Uninstallation complete
+3               Mon Dec 14 13:49:02 2020        deployed        mysql-1.6.9     5.7.30          Rollback to 1
+~~~
+
+Como esta desplegada la revisión 1 con el rollback, no tiene el valor que se ha añadido en el punto anterior de la actualización.
+
+***debian@cliente:**~* **$** `helm get values maria`
+~~~
+USER-SUPPLIED VALUES:
+null
 ~~~
 
 ## Creación de Charts en Helm
