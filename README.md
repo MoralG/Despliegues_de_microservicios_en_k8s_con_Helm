@@ -2,7 +2,7 @@
 
 [![Portada](image/Portada.png)](https://github.com/MoralG/Despliegues_de_microservicios_en_k8s_con_Helm/blob/master/Proyecto.md#despliegues-de-microservicios-en-k8s-con-helm-y-openshift)
 
-**Proyecto de fin de curo de ASIR**
+**Proyecto de fin de curso de ASIR**
 
 Nos vamos a centrar en el funcionamiento de Helm. Es una herramienta que gestiona recursos empaquetados y preconfigurados de Kubernetes, es decir, esta permite utilizar unas plantillas (llamadas charts) para la instalación de objetos de Kubernetes. Esta herramienta es muy útil ya que no se necesita conocimientos avanzados de Kubernetes.
 
